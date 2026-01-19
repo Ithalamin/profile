@@ -2,44 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>0x | Master Shop & Arbitrage</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x | Digital Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --neon: #00ff41; --bg: #050505; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; text-align: center; margin-top: 50px; }
-        .box { border: 1px solid var(--neon); padding: 30px; display: inline-block; box-shadow: 0 0 15px var(--neon); }
-        .ref-link { background: #111; padding: 10px; border: 1px dashed var(--neon); margin: 20px 0; cursor: pointer; }
-        .buy-btn { background: var(--neon); color: black; padding: 15px 30px; text-decoration: none; font-weight: bold; border-radius: 5px; }
-        .stats { font-size: 0.8rem; color: #888; margin-top: 15px; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
+        
+        body {
+            background-color: #080808;
+            color: #e0e0e0;
+            font-family: 'Space Grotesk', sans-serif;
+            background-image: radial-gradient(circle at 2px 2px, #1a1a1a 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        .glass-card {
+            background: rgba(15, 15, 15, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            border-color: #00ff41;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .neon-text {
+            color: #00ff41;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
+
+        .neon-btn {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            transition: 0.3s;
+        }
+
+        .neon-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.6);
+            transform: scale(1.05);
+        }
+
+        .glitch { font-weight: 700; letter-spacing: 2px; }
     </style>
 </head>
-<body>
-    <div class="box">
-        <h1>0x_ARBITRAGE_SYSTEM</h1>
-        <p>Premium Assets & Direct Access</p>
-        <hr color="#222">
-        <div id="product">
-            <h3>Elite Script Bundle</h3>
-            <p>Price: 499 BDT</p>
-            <a href="YOUR_ARBITRAGE_OR_WHATSAPP_LINK" class="buy-btn">ACCESS NOW</a>
+<body class="min-h-screen flex flex-col items-center py-12 px-4">
+
+    <header class="mb-16 text-center">
+        <h1 class="text-5xl glitch neon-text mb-2">0x_VAULT</h1>
+        <p class="text-gray-500 uppercase tracking-widest text-sm font-light">System Arbitrage & Digital Assets</p>
+    </header>
+
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+        
+        <div class="glass-card p-8 rounded-2xl flex flex-col items-center">
+            <div class="w-16 h-16 mb-6 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                <svg class="w-8 h-8 neon-text" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Master Script Pack</h3>
+            <p class="text-gray-400 text-center text-sm mb-6 font-light">Elite automation & system optimization tools.</p>
+            <div class="text-2xl font-bold neon-text mb-6">৳499.00</div>
+            <a href="YOUR_LINK" class="neon-btn w-full py-3 rounded-lg text-center font-bold uppercase text-xs tracking-widest">Buy Asset</a>
         </div>
-        <div class="ref-link" onclick="copyRef()">
-            GET REFERRAL LINK
+
+        </main>
+
+    <section class="mt-20 max-w-2xl w-full">
+        <div class="glass-card p-10 rounded-3xl border-dashed border-green-500/30">
+            <h2 class="text-2xl font-bold mb-4 text-center">Affiliate Program</h2>
+            <p class="text-gray-500 text-center mb-8 text-sm">Generate your unique hash and earn 20% on every conversion.</p>
+            
+            <div class="flex flex-col space-y-4">
+                <input type="text" id="refName" placeholder="ENTER YOUR_ID" class="bg-transparent border border-gray-800 p-4 rounded-xl text-center focus:outline-none focus:border-green-500 transition">
+                <button onclick="generateRef()" class="neon-btn py-4 rounded-xl font-bold">GENERATE REFERRAL LINK</button>
+            </div>
+
+            <div id="output" class="mt-6 text-sm text-center text-gray-400 break-all"></div>
         </div>
-        <div class="stats" id="refStatus">Referral ID: Not Set</div>
-    </div>
+    </section>
+
+    <footer class="mt-20 text-gray-600 text-xs tracking-widest">
+        &copy; 2024 0x_VAULT. SYSTEM_STATUS: <span class="neon-text">ENCRYPTED</span>
+    </footer>
 
     <script>
-        // Automatic Ref Capture
-        const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref') || 'System';
-        document.getElementById('refStatus').innerText = "Referred By: " + ref;
-
-        function copyRef() {
-            let name = prompt("Enter your Name/ID to earn:");
+        function generateRef() {
+            const name = document.getElementById('refName').value;
+            const output = document.getElementById('output');
             if(name) {
-                let link = `https://0x.root.sx/shop?ref=${name}`;
+                const link = `https://0x.root.sx/shop/?ref=${name}`;
+                output.innerHTML = `Your unique link: <br><span class="text-green-400 font-mono">${link}</span>`;
                 navigator.clipboard.writeText(link);
-                alert("Link Copied! Share this and earn.");
+                alert("Copied to clipboard!");
             }
         }
     </script>
