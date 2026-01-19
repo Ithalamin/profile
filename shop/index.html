@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>0x | Master Shop & Arbitrage</title>
+    <style>
+        :root { --neon: #00ff41; --bg: #050505; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; text-align: center; margin-top: 50px; }
+        .box { border: 1px solid var(--neon); padding: 30px; display: inline-block; box-shadow: 0 0 15px var(--neon); }
+        .ref-link { background: #111; padding: 10px; border: 1px dashed var(--neon); margin: 20px 0; cursor: pointer; }
+        .buy-btn { background: var(--neon); color: black; padding: 15px 30px; text-decoration: none; font-weight: bold; border-radius: 5px; }
+        .stats { font-size: 0.8rem; color: #888; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>0x_ARBITRAGE_SYSTEM</h1>
+        <p>Premium Assets & Direct Access</p>
+        <hr color="#222">
+        <div id="product">
+            <h3>Elite Script Bundle</h3>
+            <p>Price: 499 BDT</p>
+            <a href="YOUR_ARBITRAGE_OR_WHATSAPP_LINK" class="buy-btn">ACCESS NOW</a>
+        </div>
+        <div class="ref-link" onclick="copyRef()">
+            GET REFERRAL LINK
+        </div>
+        <div class="stats" id="refStatus">Referral ID: Not Set</div>
+    </div>
+
+    <script>
+        // Automatic Ref Capture
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref') || 'System';
+        document.getElementById('refStatus').innerText = "Referred By: " + ref;
+
+        function copyRef() {
+            let name = prompt("Enter your Name/ID to earn:");
+            if(name) {
+                let link = `https://0x.root.sx/shop?ref=${name}`;
+                navigator.clipboard.writeText(link);
+                alert("Link Copied! Share this and earn.");
+            }
+        }
+    </script>
+</body>
+</html>
