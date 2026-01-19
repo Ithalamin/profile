@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ith Alamin</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #fff;
+      color: #111;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    :root {
+      --black: #000;
+      --white: #fff;
+      --green: #00C853;
+    }
+
+    /* Sticky Header */
+    .header {
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      border-bottom: 2px solid var(--black);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .logo {
+      font-weight: bold;
+      font-size: 1.5rem;
+      color: var(--black);
+      user-select: none;
+    }
+
+    .menu {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .glass-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid var(--black);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--black);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      transition: color 0.3s, background-color 0.3s;
+    }
+
+    /* Dropdown container */
+    .dropdown-menu {
+      position: absolute;
+      top: 120%;
+      right: 0;
+      width: 280px;
+      background: var(--white);
+      border: 1px solid var(--black);
+      border-radius: 6px;
+      padding: 1rem;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .dropdown-menu.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .dropdown-menu ul {
+      list-style: none;
+    }
+
+    .dropdown-menu li {
+      margin-bottom: 0.6rem;
+    }
+
+    .dropdown-menu li:last-child {
+      margin-bottom: 0;
+    }
+
+    .dropdown-menu a,
+    .submenu-toggle {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-weight: 500;
+      font-size: 1rem;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      color: var(--black);
+      text-decoration: none;
+      outline: none;
+      user-select: none;
+      transition: color 0.3s;
+    }
+
+    .dropdown-menu a:hover,
+    .submenu-toggle:hover {
+      color: var(--green);
+      text-decoration: none;
+    }
+
+    /* Submenu */
+    .submenu {
+      list-style: none;
+      padding-left: 1rem;
+      margin-top: 0.4rem;
+      border-left: 2px solid var(--green);
+      display: none;
+    }
+
+    .submenu.active {
+      display: block;
+    }
+
+    .submenu li {
+      margin-bottom: 0.3rem;
+    }
+
+    .submenu li:last-child {
+      margin-bottom: 0;
+    }
+
+    .submenu a {
+      font-weight: 400;
+      font-size: 0.95rem;
+      padding-left: 0.2rem;
+      text-decoration: none;
+      user-select: none;
+    }
+
+    /* Bottom bar with line under header */
+    .bottom-bar {
+      background: var(--white);
+      padding: 0.5rem 0;
+      user-select: none;
+    }
+
+    .long-line {
+      border: none;
+      border-top: 3px solid var(--black);
+      width: 90%;
+      margin: 0 auto;
+      user-select: none;
+    }
+
+    /* Main content */
+    main {
+      max-width: 900px;
+      margin: 0 auto 6rem;
+      padding: 0 1rem;
+      user-select: none;
+    }
+
+    /* Hero Section fills viewport height */
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      margin-bottom: -3rem;
+      user-select: none;
+      padding: 0 1rem;
+    }
+
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--black);
+      max-width: 800px;
+    }
+
+    .hero p {
+      font-size: 1.0rem;
+      max-width: 600px;
+      margin: 0 auto 2rem auto;
+      font-weight: 400;
+      color: var(--black);
+      line-height: 1.5;
+    }
+
+    .btn-primary {
+      background: var(--white);
+      color: var(--black);
+      border: 2px solid var(--black);
+      padding: 0.75rem 2.5rem;
+      border-radius: 0px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      min-width: 160px;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus-visible {
+      background: var(--black);
+      color: var(--white);
+      outline: none;
+    }
+
+    /* Content Boxes */
+    .content-boxes {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      user-select: none;
+      margin-bottom: 4rem;
+    }
+
+    .content-box {
+      flex: 1 1 280px;
+      border: 2px solid var(--black);
+      border-radius: 0px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: border-color 0.3s ease, color 0.3s ease;
+      cursor: default;
+      user-select: none;
+    }
+
+    .content-box h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+      color: var(--black);
+    }
+
+    .content-box p {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--black);
+      line-height: 1.4;
+    }
+
+    /* Additional Info Section */
+    .additional-info {
+      max-width: 800px;
+      margin: 0 auto 4rem;
+      text-align: center;
+      color: var(--black);
+      user-select: none;
+    }
+
+    .additional-info h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .additional-info p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      font-weight: 400;
+      color: var(--black);
+      margin-bottom: 2rem;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--white);
+      border-top: 2px solid var(--black);
+      padding: 1rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--black);
+      font-weight: 500;
+      user-select: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* Button color toggle styles */
+    .btn-toggle-green {
+      color: var(--green);
+      border-color: var(--green);
+      background: var(--white);
+    }
+
+    .btn-toggle-blackwhite {
+      color: var(--black);
+      border-color: var(--black);
+      background: var(--white);
+    }
+
+    .btn-toggle-blackwhite:hover,
+    .btn-toggle-blackwhite:focus-visible {
+      background: var(--black);
+      color: var(--white);
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+    <link rel="canonical" href="https://ithalamin.com" />
+
+
+  <header class="header" id="main-header">
+    <div class="logo" aria-label="Site logo">A</div>
+    <nav class="menu" aria-label="Primary navigation">
+      <button class="glass-btn" aria-haspopup="true" aria-expanded="false" aria-controls="dropdown-menu" aria-label="Toggle menu">
+        &#9776;
+      </button>
+      <div id="dropdown-menu" class="dropdown-menu" role="menu" aria-hidden="true">
+        <ul>
+          <li><a href="#" role="menuitem" tabindex="-1">Dashboard</a></li>
+          <li><a href="#" role="menuitem" tabindex="-1">Profile</a></li>
+          <li>
+            <button class="submenu-toggle" aria-expanded="false" aria-controls="tools-submenu" aria-haspopup="true" tabindex="-1">
+              Tools <span style="float:right;">+</span>
+            </button>
+            <ul id="tools-submenu" class="submenu" role="menu" aria-label="Tools submenu" aria-hidden="true">
+              <li><a href="#" role="menuitem" tabindex="-1">Dropshiping Calculetor</a></li>
+              <li><a href="#" role="menuitem" tabindex="-1">Tool 2</a></li>
+              <li><a href="#" role="menuitem" tabindex="-1">Tool 3</a></li>
+            </ul>
+          </li>
+          <li><a href="#" role="menuitem" tabindex="-1">Settings</a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <div class="bottom-bar">
+    <hr class="long-line" />
+  </div>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero" role="region" aria-label="Introduction hero section">
+      <h1>Welcome to Our ultra premium website
+      </h1>
+      <p>Delivering unmatched quality, innovation, and reliability. Join us to elevate your projects with cutting-edge solutions crafted for excellence.</p>
+    <a href="https://ithalamin.com/tools"  class="btn-primary" > Tools </a>
+       <div class="bottom-bar"> </div>
+    </div>
+          <div <section class="content-boxes" >
+      <article class="content-box">
+        <h2>Ith Alamin</h2>
+        <p>Our products boast a sleek, user-focused design crafted with attention to detail and modern aesthetics.</p>
+      </article> </div>
+    </section>
+
+  
+    </div>
+    <!-- Content Boxes -->
+    <section class="content-boxes" role="region" aria-label="Core Features">
+      <article class="content-box">
+        <h2>Innovative Design</h2>
+        <p>Our products boast a sleek, user-focused design crafted with attention to detail and modern aesthetics.</p>
+        
+      </article>
+      <article class="content-box">
+        <h2>Robust Performance</h2>
+        <p>Experience seamless and reliable performance that scales with your needs and ensures consistent excellence.</p>
+      </article>
+      <article class="content-box">
+        <h2>Dedicated Support</h2>
+        <p>Our expert team is always ready to assist you with personalized support and guidance 24/7.</p>
+      </article>
+    </section>
+
+    <!-- Additional Info -->
+    <section class="additional-info" role="region" aria-label="More about our brand">
+      <h2>Why Choose Us?</h2>
+      <p>With years of experience, cutting-edge technology, and a passion for excellence, our brand stands out as a leader in delivering premium solutions that truly empower your business.</p>
+      <p>Join a community of professionals who trust us for quality, reliability, and innovation.</p>
+    </section>
+  </main>
+
+  <footer role="contentinfo">
+    &copy; 2025 Our Premium Brand — Crafted with Excellence
+  </footer>
+
+
+
+<!-- Footer section -->
+<footer id="download-footer" style="display:none; padding: 20px; background: #f9f9f9; text-align: center; border-top: 1px solid #ccc;">
+  <h2>GO TO NEXT PAGE</h2>
+  <p id="countdown-text">Link will be available in <span id="countdown">9</span> seconds...</p>
+  <a id="download-link" href="https://ithalamin.com/tools?d-p-f" style="font-size: 18px; color: #007bff; display:none;">
+    Click here
+  </a>
+</footer>
+
+<!-- Script -->
+<script>
+  function getUrlParameter(name) {
+    name = name.replace(/[\[\]]/g, '\\$&');
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+    var results = regex.exec(window.location.href);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+  }
+
+  window.onload = function() {
+    const param = getUrlParameter('download-p-file');
+    if (param !== null) {
+      const footer = document.getElementById('download-footer');
+      const countdownElement = document.getElementById('countdown');
+      const countdownText = document.getElementById('countdown-text');
+      const downloadLink = document.getElementById('download-link');
+
+      footer.style.display = 'block';
+
+      let countdown = 9; // seconds
+      countdownElement.textContent = countdown;
+
+      const interval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+
+        if (countdown <= 0) {
+          clearInterval(interval);
+          countdownText.style.display = 'none'; // hide countdown message
+          downloadLink.style.display = 'inline-block'; // show link
+          downloadLink.focus();
+          downloadLink.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 1000);
+    }
+  };
+</script>
+
+
+
+
+
+  <script>
+    const glassBtn = document.querySelector('.glass-btn');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    const submenuToggle = dropdownMenu.querySelector('.submenu-toggle');
+    const toolsSubmenu = document.getElementById('tools-submenu');
+
+    // Toggle dropdown menu
+    glassBtn.addEventListener('click', () => {
+      const expanded = glassBtn.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        dropdownMenu.classList.remove('active');
+        dropdownMenu.setAttribute('aria-hidden', 'true');
+        glassBtn.setAttribute('aria-expanded', 'false');
+
+        toolsSubmenu.classList.remove('active');
+        toolsSubmenu.setAttribute('aria-hidden', 'true');
+        submenuToggle.setAttribute('aria-expanded', 'false');
+        submenuToggle.querySelector('span').textContent = '+';
+      } else {
+        dropdownMenu.classList.add('active');
+        dropdownMenu.setAttribute('aria-hidden', 'false');
+        glassBtn.setAttribute('aria-expanded', 'true');
+
+        // Focus first menu item for accessibility
+        const firstMenuItem = dropdownMenu.querySelector('a, button');
+        if (firstMenuItem) firstMenuItem.focus();
+      }
+    });
+
+    // Toggle submenu inside dropdown
+    submenuToggle.addEventListener('click', () => {
+      const expanded = submenuToggle.getAttribute('aria-expanded') === 'true';
+      if (expanded) {
+        toolsSubmenu.classList.remove('active');
+        toolsSubmenu.setAttribute('aria-hidden', 'true');
+        submenuToggle.setAttribute('aria-expanded', 'false');
+        submenuToggle.querySelector('span').textContent = '+';
+      } else {
+        toolsSubmenu.classList.add('active');
+        toolsSubmenu.setAttribute('aria-hidden', 'false');
+        submenuToggle.setAttribute('aria-expanded', 'true');
+        submenuToggle.querySelector('span').textContent = '−';
+      }
+    });
+
+    // Close dropdown if clicking outside
+    document.addEventListener('click', (e) => {
+      if (!dropdownMenu.contains(e.target) && !glassBtn.contains(e.target)) {
+        dropdownMenu.classList.remove('active');
+        dropdownMenu.setAttribute('aria-hidden', 'true');
+        glassBtn.setAttribute('aria-expanded', 'false');
+
+        toolsSubmenu.classList.remove('active');
+        toolsSubmenu.setAttribute('aria-hidden', 'true');
+        submenuToggle.setAttribute('aria-expanded', 'false');
+        submenuToggle.querySelector('span').textContent = '+';
+      }
+    });
+
+    // Keyboard accessibility for toggles (Enter & Space)
+    glassBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        glassBtn.click();
+      }
+    });
+
+    submenuToggle.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        submenuToggle.click();
+      }
+    });
+
+    // Close dropdown with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dropdownMenu.classList.remove('active');
+        dropdownMenu.setAttribute('aria-hidden', 'true');
+        glassBtn.setAttribute('aria-expanded', 'false');
+
+        toolsSubmenu.classList.remove('active');
+        toolsSubmenu.setAttribute('aria-hidden', 'true');
+        submenuToggle.setAttribute('aria-expanded', 'false');
+        submenuToggle.querySelector('span').textContent = '+';
+
+        glassBtn.focus();
+      }
+    });
+
+    // Toggle button color scheme on click (Green <-> Black & White)
+    const toggleButtons = document.querySelectorAll('.btn-primary');
+
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('btn-toggle-green')) {
+          btn.classList.remove('btn-toggle-green');
+          btn.classList.add('btn-toggle-blackwhite');
+          btn.setAttribute('aria-pressed', 'true');
+        } else {
+          btn.classList.remove('btn-toggle-blackwhite');
+          btn.classList.add('btn-toggle-green');
+          btn.setAttribute('aria-pressed', 'false');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
