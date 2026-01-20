@@ -37,14 +37,13 @@ The system is deployed via **GitHub Pages** with a focus on **Static SEO persist
 - **CDN:** High-speed asset delivery via JSDelivr integration.
 
 ---
+##  TRAFFIC
+![Traffic](https://img.shields.io/badge/LIVE_TRAFFIC-2.4M-blue?style=for-the-badge&logo=google-analytics&logoColor=white)
+![Verified](https://img.shields.io/badge/System-Verified-success?style=flat-square&logo=ghost)
+![Security](https://img.shields.io/badge/Security-AES--256-blueviolet?style=flat-square&logo=dependabot)
 
 ## 🚀 Deployment Hacks
 
 To maintain the **Look-Short** URL structure, we utilize the directory index strategy:
 ```bash
 /tools/upscale/index.html  -->  alamin.root.sx/tools/upscale
-
-
-![Traffic](https://img.shields.io/badge/LIVE_TRAFFIC-2.4M-blue?style=for-the-badge&logo=google-analytics&logoColor=white)
-![Verified](https://img.shields.io/badge/System-Verified-success?style=flat-square&logo=ghost)
-![Security](https://img.shields.io/badge/Security-AES--256-blueviolet?style=flat-square&logo=dependabot)
