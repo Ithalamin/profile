@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x | DocConverter Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-color: #09090b;
+            --card-bg: rgba(24, 24, 27, 0.8);
+            --text-main: #fafafa;
+            --text-dim: #a1a1aa;
+            --border-color: #27272a;
+            --accent: #3b82f6;
+        }
+
+        .light-theme {
+            --bg-color: #f4f4f5;
+            --card-bg: #ffffff;
+            --text-main: #09090b;
+            --text-dim: #71717a;
+            --border-color: #e4e4e7;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background 0.4s ease;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-exe {
+            background: var(--accent);
+            color: white;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-exe:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .option-chip {
+            border: 1px solid var(--border-color);
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .option-chip.active {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <nav class="w-full max-w-2xl flex justify-between items-center mb-16">
+        <a href="/" class="font-bold text-xl tracking-tighter uppercase">0X_<span class="text-blue-500">Docs</span></a>
+        <div class="flex items-center space-x-6">
+            <button onclick="toggleTheme()" class="w-10 h-10 flex items-center justify-center rounded-full bg-zinc-800 border border-zinc-700" id="themeBtn">
+                🌙
+            </button>
+            <a href="/shop/" class="text-xs font-bold px-4 py-2 bg-blue-500/10 text-blue-500 rounded-lg border border-blue-500/20">PREMIUM</a>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold tracking-tight">Document Converter</h1>
+            <p class="text-sm opacity-60 mt-2">Convert PDF to Office, Images, or vice versa instantly.</p>
+        </div>
+
+        <div class="glass-card p-8 mb-8">
+            <div id="uploadBox">
+                <div onclick="document.getElementById('fileIn').click()" class="w-full py-12 border-2 border-dashed border-zinc-700 rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-all mb-8">
+                    <span class="text-3xl mb-3">📄</span>
+                    <p class="text-sm font-semibold opacity-70" id="fileNameDisplay">Drop PDF or Document here</p>
+                    <input type="file" id="fileIn" class="hidden" onchange="updateFileName()">
+                </div>
+
+                <div class="space-y-4">
+                    <label class="text-[10px] font-bold uppercase tracking-widest opacity-50">Select Output Format</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div onclick="setFormat('DOCX', this)" class="option-chip p-3 rounded-xl text-center text-xs font-bold active">DOCX</div>
+                        <div onclick="setFormat('JPG', this)" class="option-chip p-3 rounded-xl text-center text-xs font-bold">JPG</div>
+                        <div onclick="setFormat('PDF', this)" class="option-chip p-3 rounded-xl text-center text-xs font-bold">PDF</div>
+                    </div>
+                    
+                    <button onclick="startConversion()" class="btn-exe w-full py-4 rounded-2xl font-bold text-lg mt-6">
+                        Convert Document
+                    </button>
+                </div>
+            </div>
+
+            <div id="processBox" class="hidden py-10 text-center">
+                <div id="spin" class="inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <h3 class="font-bold text-lg" id="statusText">Analyzing File...</h3>
+                <p class="text-xs opacity-50 mt-2">This may take a few seconds based on file size.</p>
+                
+                <div id="doneBox" class="hidden mt-8">
+                    <div class="p-4 bg-zinc-800 rounded-2xl border border-zinc-700 flex items-center justify-between mb-4">
+                        <span class="text-xs font-mono" id="finalName">converted_file.docx</span>
+                        <span class="text-[10px] bg-green-500/20 text-green-500 px-2 py-1 rounded">READY</span>
+                    </div>
+                    <button class="w-full py-4 bg-white text-black font-bold rounded-2xl">Download Now</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl flex items-center justify-between">
+            <p class="text-xs opacity-70">Bulk conversion & OCR features available in vault.</p>
+            <a href="/shop/" class="text-blue-500 text-xs font-bold">Get Pro →</a>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-10 text-[10px] opacity-30 tracking-widest font-mono">
+        SYSTEM_0X // DOC_ENGINE_ALPHA
+    </footer>
+
+    <script>
+        let selectedFormat = 'DOCX';
+
+        function toggleTheme() {
+            const b = document.body;
+            const btn = document.getElementById('themeBtn');
+            b.classList.toggle('light-theme');
+            btn.innerText = b.classList.contains('light-theme') ? '☀️' : '🌙';
+        }
+
+        function setFormat(fmt, el) {
+            selectedFormat = fmt;
+            document.querySelectorAll('.option-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function updateFileName() {
+            const f = document.getElementById('fileIn').files[0];
+            if(f) document.getElementById('fileNameDisplay').innerText = f.name;
+        }
+
+        function startConversion() {
+            const file = document.getElementById('fileIn').files[0];
+            if(!file) return alert("Please select a file.");
+
+            document.getElementById('uploadBox').classList.add('hidden');
+            document.getElementById('processBox').classList.remove('hidden');
+
+            // Phase 1
+            setTimeout(() => {
+                document.getElementById('statusText').innerText = "Converting to " + selectedFormat + "...";
+            }, 1500);
+
+            // Phase 2
+            setTimeout(() => {
+                document.getElementById('spin').classList.add('hidden');
+                document.getElementById('statusText').innerText = "Conversion Complete!";
+                document.getElementById('finalName').innerText = file.name.split('.')[0] + "." + selectedFormat.toLowerCase();
+                document.getElementById('doneBox').classList.remove('hidden');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
