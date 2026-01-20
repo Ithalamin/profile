@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x | AI Background Remover</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-color: #0a0c10;
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --text-main: #f8fafc;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .light-theme {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-remove {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            transition: 0.3s;
+        }
+
+        .btn-remove:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .preview-box {
+            background-image: radial-gradient(#444 1px, transparent 1px);
+            background-size: 10px 10px;
+            background-color: #111;
+        }
+
+        .light-theme .preview-box {
+            background-color: #eee;
+            background-image: radial-gradient(#ccc 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <nav class="w-full max-w-2xl flex justify-between items-center mb-16">
+        <a href="/" class="font-bold text-xl tracking-tight uppercase">0x_<span class="text-red-500">Eraser</span></a>
+        <div class="flex items-center space-x-6">
+            <button onclick="toggleTheme()" class="p-2 rounded-full bg-slate-800 text-yellow-400 border border-slate-700 hover:rotate-12 transition" id="themeBtn">
+                🌙
+            </button>
+            <a href="/shop/" class="text-sm font-semibold text-red-500 underline decoration-2 underline-offset-4">Vault</a>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-xl">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold mb-2">Background Remover</h1>
+            <p class="text-sm opacity-70">Instantly remove backgrounds from images with AI precision.</p>
+        </div>
+
+        <div class="tool-card p-8 mb-8">
+            <div id="uploadStage">
+                <div id="dropZone" class="w-full h-56 border-2 border-dashed border-slate-700 rounded-3xl flex flex-col items-center justify-center cursor-pointer mb-6 hover:border-red-500 transition-colors">
+                    <span class="text-5xl mb-4">✂️</span>
+                    <p class="text-sm font-semibold opacity-60">Drop your photo to erase background</p>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*">
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-2 px-2">
+                        <input type="checkbox" id="hdMode" class="w-4 h-4 rounded border-slate-700 bg-slate-800 text-red-500">
+                        <label for="hdMode" class="text-xs font-bold uppercase tracking-wider opacity-60">Edge Smoothing (AI Plus)</label>
+                    </div>
+                    <button onclick="processErase()" class="btn-remove w-full py-4 rounded-2xl font-bold text-lg">
+                        Remove Background
+                    </button>
+                </div>
+            </div>
+
+            <div id="processingStage" class="hidden text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500 mb-4"></div>
+                <p class="text-sm font-mono tracking-tighter text-red-400">ISOLATING SUBJECT_OBJECT...</p>
+                <div class="w-full bg-slate-800 h-1.5 mt-6 rounded-full overflow-hidden">
+                    <div id="pBar" class="bg-red-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+
+            <div id="resultStage" class="hidden">
+                <div class="preview-box w-full h-64 rounded-2xl mb-6 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 flex items-center justify-center opacity-30">
+                        <span class="text-xs font-mono uppercase">Transparent Layer (PNG)</span>
+                    </div>
+                    <p id="fileName" class="text-xs font-bold bg-black/50 px-3 py-1 rounded-full text-white z-10"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="location.reload()" class="py-4 bg-slate-800 text-white font-bold rounded-2xl hover:bg-slate-700 transition">Try Another</button>
+                    <button class="py-4 bg-white text-black font-bold rounded-2xl hover:bg-slate-200 transition">Download PNG</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-red-500/5 border border-red-500/20 p-6 rounded-3xl">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h4 class="font-bold text-red-500 text-sm">Batch Processing?</h4>
+                    <p class="text-[11px] opacity-70">Upload 100+ images at once in our Premium Vault.</p>
+                </div>
+                <a href="/shop/" class="text-xs font-black text-red-500 border-b-2 border-red-500 pb-1">ENTER SHOP</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-10 opacity-30 text-[10px] tracking-[0.2em] font-mono text-center">
+        SYSTEM_0X // BG_REMOVER_MODULE_V1
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeBtn');
+            body.classList.toggle('light-theme');
+            btn.innerText = body.classList.contains('light-theme') ? '☀️' : '🌙';
+        }
+
+        document.getElementById('dropZone').onclick = () => document.getElementById('fileInput').click();
+
+        function processErase() {
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files[0]) return alert("Please upload a file.");
+
+            document.getElementById('uploadStage').classList.add('hidden');
+            document.getElementById('processingStage').classList.remove('hidden');
+
+            let width = 0;
+            const bar = document.getElementById('pBar');
+            const interval = setInterval(() => {
+                width += Math.random() * 20;
+                bar.style.width = Math.min(width, 100) + '%';
+                
+                if (width >= 100) {
+                    clearInterval(interval);
+                    showResult(fileInput.files[0].name);
+                }
+            }, 600);
+        }
+
+        function showResult(name) {
+            document.getElementById('processingStage').classList.add('hidden');
+            document.getElementById('resultStage').classList.remove('hidden');
+            document.getElementById('fileName').innerText = "processed_" + name + ".png";
+        }
+    </script>
+</body>
+</html>
