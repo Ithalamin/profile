@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x | Personal Operating System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&display=swap');
+        
+        body {
+            background-color: #050505;
+            color: #e0e0e0;
+            font-family: 'Fira Code', monospace;
+            overflow-x: hidden;
+        }
+
+        .neon-border {
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
+        }
+
+        .hero-gradient {
+            background: radial-gradient(circle at center, rgba(0, 255, 65, 0.1) 0%, transparent 70%);
+        }
+
+        .stat-card {
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #00ff41;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 65, 0.1);
+            position: absolute;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+            <div class="p-8 space-y-6">
+                <div>
+                    <span class="text-green-500">guest@0x:~$</span>
+                    <span class="text-white"> access --vault</span>
+                    <p class="mt-4 text-gray-400">আমার প্রিমিয়াম স্ক্রিপ্ট এবং ডিজিটাল অ্যাসেটগুলো দেখতে আমার স্টোরে প্রবেশ করুন।</p>
+                    <a href="/shop/" class="inline-block mt-4 text-[#00ff41] border border-[#00ff41] px-6 py-2 rounded hover:bg-[#00ff41] hover:text-black transition duration-300">
+                        Enter Shop_
+                    </a>
+                </div>
+
+                <div>
+                    <span class="text-green-500">guest@0x:~$</span>
+                    <span class="text-white"> connect --direct</span>
+                    <div class="flex space-x-6 mt-4">
+                        <a href="https://t.me/your_telegram" class="text-gray-500 hover:text-white underline text-sm">Telegram</a>
+                        <a href="mailto:your_email" class="text-gray-500 hover:text-white underline text-sm">Mail</a>
+                        <a href="/shop/?ref=admin" class="text-gray-500 hover:text-white underline text-sm">Affiliate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+<div class="text-[10px] text-green-900 font-mono mt-4">
+    >> SYSTEM_STATUS: <span id="sync">SYNCING...</span>
+</div>
+
+<script>
+    setInterval(() => {
+        const statuses = ["SYNCING...", "ENCRYPTED", "0% PACKET LOSS", "MONITORING ACTIVE"];
+        document.getElementById('sync').innerText = statuses[Math.floor(Math.random() * statuses.length)];
+    }, 3000);
+</script>
+        <footer class="mt-20 text-center text-gray-700 text-[10px] uppercase tracking-[4px]">
+            Established 2026 // Decentralized Logic
+        </footer>
+    </main>
+</body>
+</html>
