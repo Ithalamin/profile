@@ -1,573 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ith Alamin</title>
-  <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: system-ui, sans-serif;
-      background: #fff;
-      color: #111;
-      font-size: 16px;
-      line-height: 1.5;
-    }
-
-    :root {
-      --black: #000;
-      --white: #fff;
-      --green: #00C853;
-    }
-
-    /* Sticky Header */
-    .header {
-      position: sticky;
-      top: 0;
-      background: var(--white);
-      border-bottom: 2px solid var(--black);
-      padding: 0.5rem 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .logo {
-      font-weight: bold;
-      font-size: 1.5rem;
-      color: var(--black);
-      user-select: none;
-    }
-
-    .menu {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .glass-btn {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid var(--black);
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      cursor: pointer;
-      font-size: 20px;
-      color: var(--black);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      transition: color 0.3s, background-color 0.3s;
-    }
-
-    /* Dropdown container */
-    .dropdown-menu {
-      position: absolute;
-      top: 120%;
-      right: 0;
-      width: 280px;
-      background: var(--white);
-      border: 1px solid var(--black);
-      border-radius: 6px;
-      padding: 1rem;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-      pointer-events: none;
-      user-select: none;
-    }
-
-    .dropdown-menu.active {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-
-    .dropdown-menu ul {
-      list-style: none;
-    }
-
-    .dropdown-menu li {
-      margin-bottom: 0.6rem;
-    }
-
-    .dropdown-menu li:last-child {
-      margin-bottom: 0;
-    }
-
-    .dropdown-menu a,
-    .submenu-toggle {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      font-weight: 500;
-      font-size: 1rem;
-      padding: 0.4rem 0;
-      cursor: pointer;
-      color: var(--black);
-      text-decoration: none;
-      outline: none;
-      user-select: none;
-      transition: color 0.3s;
-    }
-
-    .dropdown-menu a:hover,
-    .submenu-toggle:hover {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    /* Submenu */
-    .submenu {
-      list-style: none;
-      padding-left: 1rem;
-      margin-top: 0.4rem;
-      border-left: 2px solid var(--green);
-      display: none;
-    }
-
-    .submenu.active {
-      display: block;
-    }
-
-    .submenu li {
-      margin-bottom: 0.3rem;
-    }
-
-    .submenu li:last-child {
-      margin-bottom: 0;
-    }
-
-    .submenu a {
-      font-weight: 400;
-      font-size: 0.95rem;
-      padding-left: 0.2rem;
-      text-decoration: none;
-      user-select: none;
-    }
-
-    /* Bottom bar with line under header */
-    .bottom-bar {
-      background: var(--white);
-      padding: 0.5rem 0;
-      user-select: none;
-    }
-
-    .long-line {
-      border: none;
-      border-top: 3px solid var(--black);
-      width: 90%;
-      margin: 0 auto;
-      user-select: none;
-    }
-
-    /* Main content */
-    main {
-      max-width: 900px;
-      margin: 0 auto 6rem;
-      padding: 0 1rem;
-      user-select: none;
-    }
-
-    /* Hero Section fills viewport height */
-    .hero {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      margin-bottom: -3rem;
-      user-select: none;
-      padding: 0 1rem;
-    }
-
-    .hero h1 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--black);
-      max-width: 800px;
-    }
-
-    .hero p {
-      font-size: 1.0rem;
-      max-width: 600px;
-      margin: 0 auto 2rem auto;
-      font-weight: 400;
-      color: var(--black);
-      line-height: 1.5;
-    }
-
-    .btn-primary {
-      background: var(--white);
-      color: var(--black);
-      border: 2px solid var(--black);
-      padding: 0.75rem 2.5rem;
-      border-radius: 0px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-      min-width: 160px;
-    }
-
-    .btn-primary:hover,
-    .btn-primary:focus-visible {
-      background: var(--black);
-      color: var(--white);
-      outline: none;
-    }
-
-    /* Content Boxes */
-    .content-boxes {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      user-select: none;
-      margin-bottom: 4rem;
-    }
-
-    .content-box {
-      flex: 1 1 280px;
-      border: 2px solid var(--black);
-      border-radius: 0px;
-      padding: 1.5rem;
-      text-align: center;
-      transition: border-color 0.3s ease, color 0.3s ease;
-      cursor: default;
-      user-select: none;
-    }
-
-    .content-box h2 {
-      font-size: 1.5rem;
-      margin-bottom: 0.8rem;
-      color: var(--black);
-    }
-
-    .content-box p {
-      font-size: 1rem;
-      font-weight: 400;
-      color: var(--black);
-      line-height: 1.4;
-    }
-
-    /* Additional Info Section */
-    .additional-info {
-      max-width: 800px;
-      margin: 0 auto 4rem;
-      text-align: center;
-      color: var(--black);
-      user-select: none;
-    }
-
-    .additional-info h2 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
-
-    .additional-info p {
-      font-size: 1.1rem;
-      line-height: 1.6;
-      font-weight: 400;
-      color: var(--black);
-      margin-bottom: 2rem;
-    }
-
-    /* Footer */
-    footer {
-      background: var(--white);
-      border-top: 2px solid var(--black);
-      padding: 1rem 1rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: var(--black);
-      font-weight: 500;
-      user-select: none;
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
-    }
-
-    /* Button color toggle styles */
-    .btn-toggle-green {
-      color: var(--green);
-      border-color: var(--green);
-      background: var(--white);
-    }
-
-    .btn-toggle-blackwhite {
-      color: var(--black);
-      border-color: var(--black);
-      background: var(--white);
-    }
-
-    .btn-toggle-blackwhite:hover,
-    .btn-toggle-blackwhite:focus-visible {
-      background: var(--black);
-      color: var(--white);
-      outline: none;
-    }
-  </style>
-</head>
-<body>
-    <link rel="canonical" href="https://alamin.root.sx" />
-
-
-  <header class="header" id="main-header">
-    <div class="logo" aria-label="Site logo">A</div>
-    <nav class="menu" aria-label="Primary navigation">
-      <button class="glass-btn" aria-haspopup="true" aria-expanded="false" aria-controls="dropdown-menu" aria-label="Toggle menu">
-        &#9776;
-      </button>
-      <div id="dropdown-menu" class="dropdown-menu" role="menu" aria-hidden="true">
-        <ul>
-          <li><a href="#" role="menuitem" tabindex="-1">Dashboard</a></li>
-          <li><a href="#" role="menuitem" tabindex="-1">Profile</a></li>
-          <li>
-            <button class="submenu-toggle" aria-expanded="false" aria-controls="tools-submenu" aria-haspopup="true" tabindex="-1">
-              Tools <span style="float:right;">+</span>
-            </button>
-            <ul id="tools-submenu" class="submenu" role="menu" aria-label="Tools submenu" aria-hidden="true">
-              <li><a href="#" role="menuitem" tabindex="-1">Dropshiping Calculetor</a></li>
-              <li><a href="#" role="menuitem" tabindex="-1">Tool 2</a></li>
-              <li><a href="#" role="menuitem" tabindex="-1">Tool 3</a></li>
-            </ul>
-          </li>
-          <li><a href="#" role="menuitem" tabindex="-1">Settings</a></li>
-        </ul>
-      </div>
-    </nav>
-  </header>
-
-  <div class="bottom-bar">
-    <hr class="long-line" />
-  </div>
-
-  <main>
-    <!-- Hero Section -->
-    <section class="hero" role="region" aria-label="Introduction hero section">
-      <h1>Welcome to Our ultra premium website
-      </h1>
-      <p>Delivering unmatched quality, innovation, and reliability. Join us to elevate your projects with cutting-edge solutions crafted for excellence.</p>
-    <a href="https://alamin.root.sx/tools"  class="btn-primary" > Tools </a>
-       <div class="bottom-bar"> </div>
-    </div>
-          <div <section class="content-boxes" >
-      <article class="content-box">
-        <h2>Ith Alamin</h2>
-        <p>Our products boast a sleek, user-focused design crafted with attention to detail and modern aesthetics.</p>
-      </article> </div>
-    </section>
-
-  
-    </div>
-    <!-- Content Boxes -->
-    <section class="content-boxes" role="region" aria-label="Core Features">
-      <article class="content-box">
-        <h2>Innovative Design</h2>
-        <p>Our products boast a sleek, user-focused design crafted with attention to detail and modern aesthetics.</p>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x |Alamin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Fira+Code:wght@400;500&display=swap');
         
-      </article>
-      <article class="content-box">
-        <h2>Robust Performance</h2>
-        <p>Experience seamless and reliable performance that scales with your needs and ensures consistent excellence.</p>
-      </article>
-      <article class="content-box">
-        <h2>Dedicated Support</h2>
-        <p>Our expert team is always ready to assist you with personalized support and guidance 24/7.</p>
-      </article>
-    </section>
+        body { background-color: #ffffff; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .mono { font-family: 'Fira Code', monospace; }
 
-    <!-- Additional Info -->
-    <section class="additional-info" role="region" aria-label="More about our brand">
-      <h2>Why Choose Us?</h2>
-      <p>With years of experience, cutting-edge technology, and a passion for excellence, our brand stands out as a leader in delivering premium solutions that truly empower your business.</p>
-      <p>Join a community of professionals who trust us for quality, reliability, and innovation.</p>
-    </section>
-  </main>
-
-  <footer role="contentinfo">
-    &copy; 2025 Our Premium Brand — Crafted with Excellence
-  </footer>
-
-
-
-<!-- Footer section -->
-<footer id="download-footer" style="display:none; padding: 20px; background: #f9f9f9; text-align: center; border-top: 1px solid #ccc;">
-  <h2>GO TO NEXT PAGE</h2>
-  <p id="countdown-text">Link will be available in <span id="countdown">9</span> seconds...</p>
-  <a id="download-link" href="https://ithalamin.com/tools?d-p-f" style="font-size: 18px; color: #007bff; display:none;">
-    Click here
-  </a>
-</footer>
-
-<!-- Script -->
-<script>
-  function getUrlParameter(name) {
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-    var results = regex.exec(window.location.href);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
-  }
-
-  window.onload = function() {
-    const param = getUrlParameter('download-p-file');
-    if (param !== null) {
-      const footer = document.getElementById('download-footer');
-      const countdownElement = document.getElementById('countdown');
-      const countdownText = document.getElementById('countdown-text');
-      const downloadLink = document.getElementById('download-link');
-
-      footer.style.display = 'block';
-
-      let countdown = 9; // seconds
-      countdownElement.textContent = countdown;
-
-      const interval = setInterval(() => {
-        countdown--;
-        countdownElement.textContent = countdown;
-
-        if (countdown <= 0) {
-          clearInterval(interval);
-          countdownText.style.display = 'none'; // hide countdown message
-          downloadLink.style.display = 'inline-block'; // show link
-          downloadLink.focus();
-          downloadLink.scrollIntoView({ behavior: 'smooth' });
+        /* Pro Modules Style */
+        .module-grid {
+            border: 1px solid #f1f5f9;
+            background: #fafbfd;
+            border-radius: 32px;
+            overflow: hidden;
         }
-      }, 1000);
-    }
-  };
-</script>
-
-
-
-
-
-  <script>
-    const glassBtn = document.querySelector('.glass-btn');
-    const dropdownMenu = document.getElementById('dropdown-menu');
-    const submenuToggle = dropdownMenu.querySelector('.submenu-toggle');
-    const toolsSubmenu = document.getElementById('tools-submenu');
-
-    // Toggle dropdown menu
-    glassBtn.addEventListener('click', () => {
-      const expanded = glassBtn.getAttribute('aria-expanded') === 'true';
-      if (expanded) {
-        dropdownMenu.classList.remove('active');
-        dropdownMenu.setAttribute('aria-hidden', 'true');
-        glassBtn.setAttribute('aria-expanded', 'false');
-
-        toolsSubmenu.classList.remove('active');
-        toolsSubmenu.setAttribute('aria-hidden', 'true');
-        submenuToggle.setAttribute('aria-expanded', 'false');
-        submenuToggle.querySelector('span').textContent = '+';
-      } else {
-        dropdownMenu.classList.add('active');
-        dropdownMenu.setAttribute('aria-hidden', 'false');
-        glassBtn.setAttribute('aria-expanded', 'true');
-
-        // Focus first menu item for accessibility
-        const firstMenuItem = dropdownMenu.querySelector('a, button');
-        if (firstMenuItem) firstMenuItem.focus();
-      }
-    });
-
-    // Toggle submenu inside dropdown
-    submenuToggle.addEventListener('click', () => {
-      const expanded = submenuToggle.getAttribute('aria-expanded') === 'true';
-      if (expanded) {
-        toolsSubmenu.classList.remove('active');
-        toolsSubmenu.setAttribute('aria-hidden', 'true');
-        submenuToggle.setAttribute('aria-expanded', 'false');
-        submenuToggle.querySelector('span').textContent = '+';
-      } else {
-        toolsSubmenu.classList.add('active');
-        toolsSubmenu.setAttribute('aria-hidden', 'false');
-        submenuToggle.setAttribute('aria-expanded', 'true');
-        submenuToggle.querySelector('span').textContent = '−';
-      }
-    });
-
-    // Close dropdown if clicking outside
-    document.addEventListener('click', (e) => {
-      if (!dropdownMenu.contains(e.target) && !glassBtn.contains(e.target)) {
-        dropdownMenu.classList.remove('active');
-        dropdownMenu.setAttribute('aria-hidden', 'true');
-        glassBtn.setAttribute('aria-expanded', 'false');
-
-        toolsSubmenu.classList.remove('active');
-        toolsSubmenu.setAttribute('aria-hidden', 'true');
-        submenuToggle.setAttribute('aria-expanded', 'false');
-        submenuToggle.querySelector('span').textContent = '+';
-      }
-    });
-
-    // Keyboard accessibility for toggles (Enter & Space)
-    glassBtn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        glassBtn.click();
-      }
-    });
-
-    submenuToggle.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        submenuToggle.click();
-      }
-    });
-
-    // Close dropdown with Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        dropdownMenu.classList.remove('active');
-        dropdownMenu.setAttribute('aria-hidden', 'true');
-        glassBtn.setAttribute('aria-expanded', 'false');
-
-        toolsSubmenu.classList.remove('active');
-        toolsSubmenu.setAttribute('aria-hidden', 'true');
-        submenuToggle.setAttribute('aria-expanded', 'false');
-        submenuToggle.querySelector('span').textContent = '+';
-
-        glassBtn.focus();
-      }
-    });
-
-    // Toggle button color scheme on click (Green <-> Black & White)
-    const toggleButtons = document.querySelectorAll('.btn-primary');
-
-    toggleButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.classList.contains('btn-toggle-green')) {
-          btn.classList.remove('btn-toggle-green');
-          btn.classList.add('btn-toggle-blackwhite');
-          btn.setAttribute('aria-pressed', 'true');
-        } else {
-          btn.classList.remove('btn-toggle-blackwhite');
-          btn.classList.add('btn-toggle-green');
-          btn.setAttribute('aria-pressed', 'false');
+        .module-item {
+            border: 1px solid #f1f5f9;
+            background: #ffffff;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-      });
-    });
-  </script>
+        .module-item:hover {
+            background: #f8faff;
+            z-index: 10;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            transform: scale(1.02);
+        }
+
+        .terminal-header {
+            background: #1e293b;
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* Animated Progress Bar */
+        .progress-line {
+            height: 2px;
+            background: #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-fill {
+            position: absolute;
+            height: 100%;
+            background: #3b82f6;
+            animation: loading 2s infinite;
+        }
+        @keyframes loading {
+            0% { left: -40%; width: 40%; }
+            100% { left: 100%; width: 40%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="max-w-7xl mx-auto px-10 py-8 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-black text-white w-9 h-9 flex items-center justify-center rounded-xl font-bold">0x</div>
+            <span class="mono text-[10px] font-bold tracking-[0.3em] uppercase opacity-40">Alamin_Islam_v2</span>
+        </div>
+        <div class="flex space-x-10 items-center">
+            <a href="/tools/" class="text-xs font-bold uppercase tracking-widest hover:text-blue-600 transition">Directory</a>
+            <a href="/shop/" class="text-xs font-bold uppercase tracking-widest bg-black text-white px-6 py-3 rounded-full">The Vault</a>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-10 pt-10 pb-20">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-20">
+            <div class="lg:col-span-6 flex flex-col justify-center">
+                <div class="inline-block px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-widest mb-6">Verified Operator</div>
+                <h1 class="text-6xl lg:text-8xl font-extrabold tracking-tighter mb-8">
+                    0x<span class="text-blue-600">_</span>Alamin
+                </h1>
+                <p class="text-lg text-slate-500 max-w-md leading-relaxed">
+                    High-performance system architecture & digital arbitrage. Turning complex logic into seamless operational tools.
+                </p>
+            </div>
+
+            <div class="lg:col-span-6">
+                <div class="shadow-2xl rounded-2xl overflow-hidden border border-slate-800">
+                    <div class="terminal-header px-5 py-3 flex justify-between items-center">
+                        <div class="flex space-x-2">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                        </div>
+                        <span class="mono text-[10px] text-slate-400 uppercase tracking-widest">Main_Terminal</span>
+                    </div>
+                    <div class="bg-[#0f172a] p-8 mono text-sm min-h-[250px]">
+                        <p class="text-blue-400 mb-2">guest@0x:~$ <span class="text-white">init --system-check</span></p>
+                        <p class="text-slate-500 mb-4">> Loading modules... [OK]</p>
+                        <p class="text-blue-400 mb-2">guest@0x:~$ <span class="text-white">run arbitrage_logic.sh</span></p>
+                        <p class="text-green-500 mb-4">> Executing: 102.4 TPS | Latency: 4ms</p>
+                        <p class="text-blue-400 mb-2">guest@0x:~$ <span class="text-white">status</span></p>
+                        <p class="text-yellow-500">> System: Operational | Vault: Encrypted</p>
+                        <div class="flex mt-6 animate-pulse">
+                            <div class="w-2 h-5 bg-blue-500"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="module-grid grid grid-cols-1 md:grid-cols-4 p-4 gap-4">
+            
+            <div class="module-item md:col-span-2 p-10 rounded-[24px]">
+                <div class="flex justify-between items-start mb-12">
+                    <div class="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-blue-200">⚡</div>
+                    <span class="mono text-[10px] font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full uppercase">Protocol 01</span>
+                </div>
+                <h3 class="text-2xl font-extrabold mb-4 uppercase tracking-tight">System Optimization</h3>
+                <p class="text-slate-500 text-sm mb-8 leading-relaxed"></p>
+                <div class="progress-line rounded-full"><div class="progress-fill"></div></div>
+            </div>
+
+            <div class="module-item p-10 rounded-[24px]">
+                <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mb-8 text-lg">🛡️</div>
+                <h3 class="text-lg font-extrabold mb-3 uppercase tracking-tight">Encrypted<br>Vault</h3>
+                <p class="text-[12px] text-slate-400 mb-6"></p>
+                <a href="/shop/" class="mono text-[10px] font-bold text-blue-600 hover:underline tracking-widest uppercase">Entry >></a>
+            </div>
+
+            <div class="module-item p-10 rounded-[24px]">
+                <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mb-8 text-lg">📡</div>
+                <h3 class="text-lg font-extrabold mb-3 uppercase tracking-tight">Live<br>Tracking</h3>
+                <p class="text-[12px] text-slate-400 mb-6"></p>
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                    <span class="mono text-[9px] font-bold uppercase text-green-600">Live</span>
+                </div>
+            </div>
+
+            <div class="module-item md:col-span-4 p-10 flex flex-col md:flex-row justify-between items-center rounded-[24px]">
+                <div>
+                    <h3 class="text-xl font-extrabold uppercase tracking-tight mb-2">Operational Tools Directory</h3>
+                    <p class="text-sm text-slate-400"></p>
+                </div>
+                <a href="/tools/" class="mt-6 md:mt-0 bg-blue-50 text-blue-600 px-10 py-4 rounded-2xl font-bold text-sm hover:bg-blue-600 hover:text-white transition duration-300 uppercase tracking-widest">
+                    Launch Directory
+                </a>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-10 py-16 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center">
+        <div class="flex items-center space-x-6">
+            <span class="mono text-[10px] font-bold text-slate-300 uppercase tracking-widest">&copy; 2026 0x_Root_SX</span>
+            <span class="mono text-[10px] font-bold text-slate-300 uppercase tracking-widest">Lat: 23.8103° N // Long: 90.4125° E</span>
+        </div>
+        <div class="flex space-x-10 mt-6 md:mt-0">
+            <a href="#" class="mono text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hover:text-black">GitHub</a>
+            <a href="#" class="mono text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hover:text-black">Telegram</a>
+        </div>
+    </footer>
 
 </body>
 </html>
