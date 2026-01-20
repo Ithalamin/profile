@@ -3,125 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>0x | Personal Operating System</title>
+    <title>0x | 404 - Path Not Found</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&display=swap');
         
         body {
-            background-color: #050505;
-            color: #e0e0e0;
+            background-color: #ffffff;
+            color: #1a1a1a;
             font-family: 'Fira Code', monospace;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        .neon-border {
-            border: 1px solid rgba(0, 255, 65, 0.2);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
+        .terminal-window {
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
         }
 
-        .hero-gradient {
-            background: radial-gradient(circle at center, rgba(0, 255, 65, 0.1) 0%, transparent 70%);
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background: #00ff41;
+            animation: blink 1s infinite;
+            vertical-align: middle;
         }
 
-        .stat-card {
-            background: rgba(15, 15, 15, 0.6);
-            backdrop-filter: blur(10px);
-            border-left: 4px solid #00ff41;
+        @keyframes blink {
+            50% { opacity: 0; }
         }
 
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(0, 255, 65, 0.1);
+        .glitch-text {
+            font-weight: 800;
+            font-size: 8rem;
+            letter-spacing: -5px;
+            color: #f3f4f6;
             position: absolute;
-            animation: scan 4s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
+            z-index: -1;
+            user-select: none;
         }
     </style>
 </head>
-<body class="min-h-screen relative flex flex-col items-center">
-    <div class="scanline"></div>
-    <div class="hero-gradient absolute inset-0 z-0"></div>
+<body class="min-h-screen flex items-center justify-center p-6">
 
-    <main class="z-10 w-full max-w-4xl px-6 py-20">
-        
-        <header class="mb-12">
-            <div class="flex items-center space-x-4 mb-6">
-                <div class="w-20 h-20 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-center text-3xl font-bold text-[#00ff41]">
-                    0x
+    <div class="glitch-text uppercase">Error 404</div>
+
+    <main class="w-full max-w-2xl">
+        <div class="terminal-window rounded-2xl overflow-hidden">
+            <div class="bg-[#f9fafb] px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex space-x-2">
+                    <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
                 </div>
-                <div>
-                    <h1 class="text-3xl font-bold tracking-tighter">PROJECT_0x</h1>
-                    <p class="text-green-500/60 text-sm italic">System Architect & Arbitrage Operator</p>
-                </div>
+                <span class="text-[10px] text-gray-400 font-mono tracking-widest uppercase">System_Failure_Detected</span>
             </div>
-            <p class="text-gray-400 leading-relaxed max-w-2xl">
-                সিস্টেমের সীমাবদ্ধতা ভাঙাই আমার নেশা। আমি এমন ডিজিটাল সলিউশন তৈরি করি যা সাধারণের নজরে আসে না। 
-                নিচে আমার অ্যাক্টিভ প্রোটোকলগুলো দেওয়া হলো।
-            </p>
-        </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
-            <div class="stat-card p-6">
-                <div class="text-xs text-gray-500 uppercase mb-1">Expertise</div>
-                <div class="text-xl font-bold">Web Exploits</div>
-            </div>
-            <div class="stat-card p-6">
-                <div class="text-xs text-gray-500 uppercase mb-1">Mindset</div>
-                <div class="text-xl font-bold">Arbitrage</div>
-            </div>
-            <div class="stat-card p-6">
-                <div class="text-xs text-gray-500 uppercase mb-1">Status</div>
-                <div class="text-xl font-bold text-green-500">Online</div>
-            </div>
-        </div>
-
-        <div class="neon-border rounded-2xl overflow-hidden bg-black/40">
-            <div class="bg-[#111] px-4 py-2 border-b border-white/5 flex items-center space-x-2">
-                <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
-                <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
-                <span class="text-[10px] text-gray-600 font-mono pl-2">bash --session_0x</span>
-            </div>
-            <div class="p-8 space-y-6">
+            <div class="p-10 space-y-8">
                 <div>
-                    <span class="text-green-500">guest@0x:~$</span>
-                    <span class="text-white"> access --vault</span>
-                    <p class="mt-4 text-gray-400">আমার প্রিমিয়াম স্ক্রিপ্ট এবং ডিজিটাল অ্যাসেটগুলো দেখতে আমার স্টোরে প্রবেশ করুন।</p>
-                    <a href="/shop/" class="inline-block mt-4 text-[#00ff41] border border-[#00ff41] px-6 py-2 rounded hover:bg-[#00ff41] hover:text-black transition duration-300">
-                        Enter Shop_
-                    </a>
+                    <div class="flex items-center space-x-2 text-sm mb-4">
+                        <span class="text-green-600 font-bold">guest@0x:~$</span>
+                        <span class="text-gray-800">locate --requested-path</span>
+                    </div>
+                    
+                    <h1 class="text-5xl font-light tracking-tighter text-gray-900">
+                        404_<span class="text-green-500 font-bold">NULL</span><span class="cursor"></span>
+                    </h1>
+                    
+                    <p class="mt-6 text-gray-500 text-sm leading-relaxed max-w-sm">
+                        The requested sector does not exist or has been moved to the <span class="text-black font-bold">Shadow Vault</span>. 
+                    </p>
                 </div>
 
-                <div>
-                    <span class="text-green-500">guest@0x:~$</span>
-                    <span class="text-white"> connect --direct</span>
-                    <div class="flex space-x-6 mt-4">
-                        <a href="https://t.me/your_telegram" class="text-gray-500 hover:text-white underline text-sm">Telegram</a>
-                        <a href="mailto:your_email" class="text-gray-500 hover:text-white underline text-sm">Mail</a>
-                        <a href="/shop/?ref=admin" class="text-gray-500 hover:text-white underline text-sm">Affiliate</a>
+                <div class="pt-6 border-t border-gray-50">
+                    <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-4">Automated Recovery Initiated...</p>
+                    <div class="flex items-center space-x-4">
+                        <a href="/" class="text-xs font-bold px-5 py-2 border border-black hover:bg-black hover:text-white transition">Return Home</a>
+                        <a href="/shop/" class="text-xs font-bold text-green-600 hover:underline">Access Shop_</a>
                     </div>
                 </div>
             </div>
         </div>
-<div class="text-[10px] text-green-900 font-mono mt-4">
-    >> SYSTEM_STATUS: <span id="sync">SYNCING...</span>
-</div>
 
-<script>
-    setInterval(() => {
-        const statuses = ["SYNCING...", "ENCRYPTED", "0% PACKET LOSS", "MONITORING ACTIVE"];
-        document.getElementById('sync').innerText = statuses[Math.floor(Math.random() * statuses.length)];
-    }, 3000);
-</script>
-        <footer class="mt-20 text-center text-gray-700 text-[10px] uppercase tracking-[4px]">
-            Established 2026 // Decentralized Logic
-        </footer>
+        <div class="mt-8 flex justify-between items-center px-4">
+            <div class="text-[9px] text-gray-400 uppercase font-mono">
+                Redirecting in <span id="timer" class="text-black font-bold">10</span>s
+            </div>
+            <div class="text-[9px] text-gray-300 font-mono">
+                [UUID: 0x-RECOVERY-ALPHA]
+            </div>
+        </div>
     </main>
+
+    <script>
+        // Smart Redirect Logic
+        let timeLeft = 10;
+        const timerElement = document.getElementById('timer');
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            timerElement.innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                window.location.href = "/shop/"; // হারানো ট্রাফিককে সরাসরি শপে পাঠাবে
+            }
+        }, 1000);
+    </script>
 </body>
 </html>
