@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>0x | Ghost Slate UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            background-color: #0a0c10; /* Deep Obsidian */
+            color: #e2e8f0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image: radial-gradient(circle at top right, #1e293b 0%, #0a0c10 40%);
+        }
+
+        .ghost-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(51, 65, 85, 1);
+            color: #f8fafc;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            background: rgba(15, 23, 42, 0.9);
+        }
+
+        .btn-glow {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+            transition: 0.3s;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .btn-glow:active { transform: scale(0.97); }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .shimmer {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shimmer::after {
+            content: "";
+            position: absolute;
+            top: 0; right: 0; bottom: 0; left: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+            transform: translateX(-100%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-12 px-6">
+
+    <nav class="w-full max-w-2xl flex justify-between items-center mb-20">
+        <a href="/" class="font-extrabold text-2xl tracking-tighter shimmer">0X_<span class="text-blue-500">SYSTEM</span></a>
+        <div class="flex space-x-8">
+            <a href="/shop/" class="text-sm font-medium text-slate-400 hover:text-blue-400 transition">Vault</a>
+            <a href="/shop/" class="text-sm font-bold px-4 py-2 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Upgrade</a>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-lg">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold tracking-tight text-white mb-3">Ghost Linker</h1>
+            <p class="text-slate-400 font-medium">ডিপ-লেভেল এনক্রিপশন ও ইউআরএল অপ্টিমাইজেশন।</p>
+        </header>
+
+        <div class="ghost-card p-10 mb-8">
+            <div class="space-y-6">
+                <div>
+                    <label class="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1 mb-2 block">System Input</label>
+                    <input type="text" id="urlInput" placeholder="Enter target URL..." 
+                    class="input-field w-full p-4 rounded-2xl outline-none text-base">
+                </div>
+                
+                <button onclick="processLink()" id="mainBtn" class="btn-glow w-full py-4 rounded-2xl font-bold text-white tracking-wide text-lg">
+                    Execute Optimization
+                </button>
+            </div>
+
+            <div id="resultArea" class="mt-10 pt-8 border-t border-slate-700/50 hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-blue-400 uppercase tracking-widest">Generated Output</span>
+                    <span class="text-[10px] text-slate-500 mono">Status: 200 OK</span>
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="outputUrl" readonly 
+                    class="flex-1 p-4 bg-black/40 border border-slate-800 rounded-2xl text-blue-400 mono text-sm outline-none">
+                    <button onclick="copyLink()" class="px-6 bg-white text-black rounded-2xl font-bold hover:bg-slate-200 transition">Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-blue-900/20 to-transparent border border-blue-500/10 p-6 rounded-3xl flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <span class="text-blue-400 text-xl">⚡</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm">Need Shadow-Grade API?</h4>
+                    <p class="text-[11px] text-slate-500">আপনার নিজস্ব সার্ভারে আমাদের টুল ইন্টিগ্রেট করুন।</p>
+                </div>
+            </div>
+            <a href="/shop/" class="text-xs font-bold text-blue-400 hover:underline">Access Vault</a>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-10 text-slate-600 text-[10px] uppercase tracking-[0.2em] mono">
+        &copy; 2026 Core_0x_Systems // Traffic Arbitrage Ready
+    </footer>
+
+    <script>
+        function processLink() {
+            const input = document.getElementById('urlInput').value;
+            const btn = document.getElementById('mainBtn');
+            const result = document.getElementById('resultArea');
+            const output = document.getElementById('outputUrl');
+            
+            if(!input) return alert("URL প্রয়োজন।");
+
+            // Animation Loop
+            btn.innerText = "Encrypting...";
+            btn.style.opacity = "0.7";
+
+            setTimeout(() => {
+                const fakeShort = "https://0x.root.sx/x/" + Math.random().toString(36).substring(7);
+                output.value = fakeShort;
+                result.classList.remove('hidden');
+                btn.innerText = "Optimization Complete";
+                btn.style.opacity = "1";
+            }, 1200);
+        }
+
+        function copyLink() {
+            const copyText = document.getElementById("outputUrl");
+            copyText.select();
+            document.execCommand("copy");
+            alert("কপি করা হয়েছে!");
+        }
+    </script>
+</body>
+</html>
