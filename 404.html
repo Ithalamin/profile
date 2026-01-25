@@ -98,7 +98,7 @@
 
     <script>
         // Smart Redirect Logic
-        let timeLeft = 40;
+        let timeLeft = 60;
         const timerElement = document.getElementById('timer');
 
         const countdown = setInterval(() => {
@@ -108,7 +108,7 @@
                 clearInterval(countdown);
                 window.location.href = "/shop/"; // error user redirect
             }
-        }, 1000);
+        }, 60000);
     </script>
 </body>
 </html>
