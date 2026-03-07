@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chat_room | Secure P2P</title>
+    <title>Ghost-Net V10 | Real-Time P2P</title>
     
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -21,227 +21,239 @@
             --border: #d0d7de; --me: #0969da; --shadow: rgba(0,0,0,0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, system-ui, sans-serif; }
         
-        body, html { height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; }
+        body, html { height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; }
 
         /* HEADER */
         header {
             height: 60px; padding: 0 15px; background: var(--surface);
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); box-shadow: 0 2px 10px var(--shadow); z-index: 50;
+            border-bottom: 1px solid var(--border); z-index: 100; backdrop-filter: blur(10px);
         }
-        .id-badge { font-size: 12px; font-weight: 600; color: var(--primary); background: rgba(88, 166, 255, 0.1); padding: 5px 10px; border-radius: 6px; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .id-badge { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 0.5px; opacity: 0.9; }
 
-        /* ACTIONS */
-        .nav-btns { display: flex; gap: 8px; }
-        .icon-btn { 
+        /* NAV */
+        .nav-btns { display: flex; gap: 10px; }
+        .btn { 
             background: transparent; border: 1px solid var(--border); color: var(--text);
-            width: 35px; height: 35px; border-radius: 8px; cursor: pointer;
+            width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
             display: flex; align-items: center; justify-content: center; transition: 0.2s;
         }
-        .icon-btn:hover { background: var(--border); }
-        .icon-btn.active { border-color: var(--primary); color: var(--primary); }
+        .btn.active { border-color: var(--primary); color: var(--primary); background: rgba(88, 166, 255, 0.1); }
 
-        /* CHAT BOX */
+        /* VIEWPORT (CHAT AREA) */
         #viewport { 
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px;
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;
             background: var(--bg); scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
         }
-        .msg-row { display: flex; flex-direction: column; max-width: 85%; align-self: flex-start; }
-        .msg-row.own { align-self: flex-end; }
+        
+        /* MESSAGE BUBBLES */
+        .msg-container { display: flex; flex-direction: column; max-width: 85%; align-self: flex-start; animation: fadeIn 0.2s ease-out; }
+        .msg-container.own { align-self: flex-end; }
         
         .bubble { 
             background: var(--surface); padding: 12px 16px; border-radius: 18px;
-            font-size: 15px; line-height: 1.4; border: 1px solid var(--border); word-wrap: break-word;
+            font-size: 14.5px; line-height: 1.5; border: 1px solid var(--border); word-break: break-word;
         }
-        .own .bubble { background: var(--me); color: #fff; border: none; border-bottom-right-radius: 4px; }
-        .msg-row:not(.own) .bubble { border-bottom-left-radius: 4px; }
+        .own .bubble { background: var(--me); color: #fff; border: none; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2); }
+        .msg-container:not(.own) .bubble { border-bottom-left-radius: 4px; }
 
-        .ts { font-size: 10px; color: #8b949e; margin-top: 4px; display: flex; gap: 5px; }
-        .own .ts { justify-content: flex-end; }
+        .meta { font-size: 10px; color: #8b949e; margin-top: 5px; display: flex; gap: 8px; font-weight: 500; }
+        .own .meta { justify-content: flex-end; }
 
-        /* SETTINGS MODAL */
-        #modal-box {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+        /* MODAL */
+        #modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
             display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
         }
-        .modal {
-            background: var(--surface); width: 100%; max-width: 380px; padding: 25px;
-            border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 10px 50px #000;
+        .modal-content {
+            background: var(--surface); width: 100%; max-width: 380px; padding: 30px;
+            border-radius: 20px; border: 1px solid var(--border);
         }
-        .field { margin-bottom: 15px; }
-        .field label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px; color: #8b949e; }
-        input, select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 8px; outline: none; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 8px; color: #8b949e; font-weight: 600; }
+        input, select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
 
         /* FOOTER */
-        footer { padding: 10px 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
-        .input-wrap { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 0 15px; display: flex; align-items: center; }
-        footer input { border: none; background: transparent; padding: 10px 0; flex: 1; color: var(--text); outline: none; }
-        .send-btn { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        footer { padding: 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+        .input-bar { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 25px; padding: 0 15px; display: flex; align-items: center; }
+        footer input { border: none; background: transparent; padding: 12px 0; flex: 1; color: var(--text); outline: none; font-size: 15px; }
+        .send-btn { background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
+        .send-btn:hover { transform: scale(1.05); }
 
         /* TOAST */
-        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 12px; display: none; z-index: 2000; }
+        #toast { position: fixed; top: 75px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; display: none; z-index: 2000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
 
-        /* RESPONSIVE DESKTOP */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* RESPONSIVE */
         @media (min-width: 768px) {
-            #viewport { padding: 30px 25%; }
-            header { padding: 0 25%; }
-            footer { padding: 15px 25%; }
-            .msg-row { max-width: 70%; }
+            #viewport { padding: 30px 20%; }
+            header { padding: 0 20%; }
+            footer { padding: 20px 20%; }
         }
     </style>
 </head>
 <body class="dark">
 
 <header>
-    <div class="id-badge" id="room-label">GHOST//SYNCING</div>
+    <div class="logo-area">
+        <div class="id-badge" id="room-id">ROOM//CONNECTING...</div>
+    </div>
     <div class="nav-btns">
-        <button class="icon-btn" onclick="copy()"><i data-lucide="link" size="18"></i></button>
-        <button class="icon-btn" onclick="toggleT()"><i data-lucide="sun" id="t-icon" size="18"></i></button>
-        <button id="n-btn" class="icon-btn" onclick="askNotif()"><i data-lucide="bell" size="18"></i></button>
-        <button class="icon-btn" onclick="openM(true)"><i data-lucide="settings" size="18"></i></button>
+        <button class="btn" onclick="copy()" title="Copy Link"><i data-lucide="link" size="18"></i></button>
+        <button class="btn" onclick="toggleTheme()" title="Theme"><i data-lucide="sun" id="theme-ico" size="18"></i></button>
+        <button id="notify-btn" class="btn" onclick="requestNotif()" title="Notifications"><i data-lucide="bell" size="18"></i></button>
+        <button class="btn" onclick="showModal(true)" title="Settings"><i data-lucide="settings" size="18"></i></button>
     </div>
 </header>
 
 <main id="viewport"></main>
-<div id="toast">New Message Received</div>
+<div id="toast">New Update</div>
 
-<div id="modal-box" onclick="openM(false)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <h3 style="margin-bottom: 20px;">Node Settings</h3>
-        <div class="field"><label>Display Alias</label><input type="text" id="set-n" onchange="upd()"></div>
-        <div class="field"><label>Room Password (Key)</label><input type="password" id="set-k" placeholder="Secret Key"></div>
-        <div class="field"><label>Auto-Destruct</label>
-            <select id="set-p" onchange="upd()">
+<div id="modal-overlay" onclick="showModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 25px; font-size: 18px;">Protocol Settings</h3>
+        <div class="input-group"><label>Alias (Username)</label><input type="text" id="node-name" onchange="saveSettings()"></div>
+        <div class="input-group"><label>Encryption Key</label><input type="password" id="node-key" placeholder="Private key..."></div>
+        <div class="input-group"><label>Auto-Destruct</label>
+            <select id="node-purge" onchange="saveSettings()">
                 <option value="3600000">1 Hour</option>
                 <option value="86400000" selected>24 Hours</option>
                 <option value="0">Never</option>
             </select>
         </div>
-        <button onclick="nuke()" style="width:100%; padding:12px; background:#da3633; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Destroy Cache</button>
+        <button onclick="clearCache()" style="width:100%; padding:14px; background:rgba(218,54,51,0.1); color:#ff7b72; border:1px solid #da3633; border-radius:12px; font-weight:700; cursor:pointer;">Nuke Session</button>
     </div>
 </div>
 
 <footer>
-    <label style="cursor:pointer" class="icon-btn"><i data-lucide="plus" size="20"></i><input type="file" id="f-in" style="display:none" onchange="upFile(this)"></label>
-    <div class="input-wrap"><input type="text" id="m-in" placeholder="Message..." autocomplete="off"></div>
-    <button class="send-btn" onclick="send()"><i data-lucide="send" size="18"></i></button>
+    <label style="cursor:pointer" class="btn"><i data-lucide="paperclip" size="20"></i><input type="file" id="file-input" style="display:none" onchange="handleFile(this)"></label>
+    <div class="input-bar"><input type="text" id="msg-input" placeholder="Secure message..." autocomplete="off"></div>
+    <button class="send-btn" onclick="sendMessage()"><i data-lucide="send" size="20"></i></button>
 </footer>
 
 <script>
-    // ROOM SETUP & RELAYS
-    const HASH = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
-    document.getElementById('room-label').innerText = `ROOM//${HASH.toUpperCase()}`;
+    const ROOM_HASH = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
+    document.getElementById('room-id').innerText = `ROOM//${ROOM_HASH.toUpperCase()}`;
 
-    // Multiple relays for 100% uptime
+    // Reactive P2P Ajax-style Mesh
     const gun = Gun({
         peers: [
             'https://gun-manhattan.herokuapp.com/gun',
             'https://peer.wall.org/gun',
-            'https://gundb-relay.herokuapp.com/gun',
-            'https://gun-us.herokuapp.com/gun'
-        ]
+            'https://gundb-relay.herokuapp.com/gun'
+        ],
+        localStorage: true // local cache for instant loading
     });
-    const db = gun.get('ghost_v9_core_' + HASH);
+    const chatRoom = gun.get('ghost_v10_final_' + ROOM_HASH);
 
-    let state = JSON.parse(localStorage.getItem('ghost_v9_st')) || {
+    let state = JSON.parse(localStorage.getItem('ghost_v10_config')) || {
         n: "Ghost_" + Math.random().toString(36).substring(7).toUpperCase(),
         p: 86400000,
         not: false,
         th: 'dark'
     };
 
-    const Cryp = {
-        k: () => CryptoJS.SHA256(HASH + (document.getElementById('set-k').value || 'GHOST_SECURE')).toString(),
-        pack: (o) => LZString.compressToUTF16(CryptoJS.AES.encrypt(JSON.stringify(o), Cryp.k()).toString()),
-        unpack: (b) => {
-            try { return JSON.parse(CryptoJS.AES.decrypt(LZString.decompressFromUTF16(b), Cryp.k()).toString(CryptoJS.enc.Utf8)); }
+    const Cipher = {
+        key: () => CryptoJS.SHA256(ROOM_HASH + (document.getElementById('node-key').value || 'GHOST_V10')).toString(),
+        seal: (obj) => LZString.compressToUTF16(CryptoJS.AES.encrypt(JSON.stringify(obj), Cipher.key()).toString()),
+        open: (blob) => {
+            try { return JSON.parse(CryptoJS.AES.decrypt(LZString.decompressFromUTF16(blob), Cipher.key()).toString(CryptoJS.enc.Utf8)); }
             catch(e) { return null; }
         }
     };
 
-    function openM(s) { document.getElementById('modal-box').style.display = s ? 'flex' : 'none'; }
-    function upd() {
-        state.n = document.getElementById('set-n').value || state.n;
-        state.p = document.getElementById('set-p').value;
-        localStorage.setItem('ghost_v9_st', JSON.stringify(state));
+    function showModal(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
+    function saveSettings() {
+        state.n = document.getElementById('node-name').value || state.n;
+        state.p = document.getElementById('node-purge').value;
+        localStorage.setItem('ghost_v10_config', JSON.stringify(state));
     }
 
-    function toggleT() { state.th = state.th === 'dark' ? 'light' : 'dark'; applyT(); upd(); }
-    function applyT() {
+    function toggleTheme() { state.th = state.th === 'dark' ? 'light' : 'dark'; applyTheme(); saveSettings(); }
+    function applyTheme() {
         document.body.className = state.th;
-        const ico = document.getElementById('t-icon');
+        const ico = document.getElementById('theme-ico');
         ico.setAttribute('data-lucide', state.th === 'dark' ? 'sun' : 'moon');
         lucide.createIcons();
     }
 
-    function askNotif() {
-        if (!("Notification" in window)) return showToast("Not supported in this browser");
+    function requestNotif() {
+        if (!("Notification" in window)) return notifyToast("Browser not supported");
         Notification.requestPermission().then(p => {
             if(p === 'granted') {
                 state.not = !state.not;
-                document.getElementById('n-btn').classList.toggle('active', state.not);
-                upd();
-                showToast(state.not ? "Notifications On" : "Notifications Off");
+                document.getElementById('notify-btn').classList.toggle('active', state.not);
+                saveSettings();
+                notifyToast(state.not ? "Notifications Enabled" : "Notifications Disabled");
             }
         });
     }
 
-    function showToast(m) {
+    function notifyToast(m) {
         const t = document.getElementById('toast');
         t.innerText = m; t.style.display = 'block';
         setTimeout(() => t.style.display = 'none', 3000);
     }
 
+    // REAL-TIME AJAX SYSTEM (Reactive Listeners)
     const view = document.getElementById('viewport');
-    db.map().once((data, id) => {
-        if(!data || !data.payload) return;
-        const msg = Cryp.unpack(data.payload);
+    const processedMessages = new Set();
+
+    chatRoom.map().on((data, id) => {
+        if(!data || !data.payload || processedMessages.has(id)) return;
+        const msg = Cipher.open(data.payload);
         if(!msg) return;
 
-        // Purge check
-        if (state.p != 0 && (Date.now() - msg.ts) > parseInt(state.p)) { db.get(id).put(null); return; }
+        // Auto-Purge Logic
+        if (state.p != 0 && (Date.now() - msg.ts) > parseInt(state.p)) { chatRoom.get(id).put(null); return; }
 
+        processedMessages.add(id);
         const row = document.createElement('div');
-        row.className = 'msg-row' + (msg.s === state.n ? ' own' : '');
+        row.className = 'msg-container' + (msg.s === state.n ? ' own' : '');
         const content = msg.t === 'txt' ? msg.c : `<a href="${msg.c}" download="${msg.f}" style="color:inherit; font-weight:bold;">📎 ${msg.f}</a>`;
         
-        row.innerHTML = `<div class="bubble">${content}</div><div class="ts"><span>${msg.s}</span><span>${new Date(msg.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`;
+        row.innerHTML = `<div class="bubble">${content}</div><div class="meta"><span>${msg.s}</span><span>${new Date(msg.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`;
         view.appendChild(row);
         view.scrollTop = view.scrollHeight;
 
         if(msg.s !== state.n) {
-            if(state.not && !document.hidden) showToast(`Message from ${msg.s}`);
-            if(state.not && document.hidden) new Notification(`Ghost-Net: ${msg.s}`, { body: msg.t === 'txt' ? msg.c : "Shared a file" });
+            if(state.not && !document.hidden) notifyToast(`New message from ${msg.s}`);
+            if(state.not && document.hidden) new Notification(`Ghost-Net`, { body: `${msg.s}: ${msg.t === 'txt' ? msg.content : 'sent a file'}` });
         }
     });
 
-    function send() {
-        const i = document.getElementById('m-in');
-        if(!i.value.trim()) return;
-        db.set({ payload: Cryp.pack({ t: 'txt', c: i.value, s: state.n, ts: Date.now() }) });
-        i.value = '';
+    function sendMessage() {
+        const input = document.getElementById('msg-input');
+        if(!input.value.trim()) return;
+        chatRoom.set({ payload: Cipher.seal({ t: 'txt', c: input.value, s: state.n, ts: Date.now() }) });
+        input.value = '';
     }
 
-    function upFile(el) {
+    function handleFile(el) {
         const file = el.files[0];
-        if (file.size > 1000000) return alert("File too big (Max 1MB)");
+        if (file.size > 1048576) return alert("Max size 1MB");
         const reader = new FileReader();
-        reader.onload = (e) => db.set({ payload: Cryp.pack({ t: 'file', c: e.target.result, f: file.name, s: state.n, ts: Date.now() }) });
+        reader.onload = (e) => chatRoom.set({ payload: Cipher.seal({ t: 'file', c: e.target.result, f: file.name, s: state.n, ts: Date.now() }) });
         reader.readAsDataURL(file);
     }
 
-    function copy() { navigator.clipboard.writeText(window.location.href); showToast("Link Copied!"); }
-    function nuke() { if(confirm("Clear everything?")) { localStorage.clear(); location.reload(); } }
+    function copy() { navigator.clipboard.writeText(window.location.href); notifyToast("Room link copied!"); }
+    function clearCache() { if(confirm("Wipe all data?")) { localStorage.clear(); location.reload(); } }
     
-    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'm-in') send(); };
+    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'msg-input') sendMessage(); };
 
-    // Init
-    document.getElementById('set-n').value = state.n;
-    document.getElementById('set-p').value = state.p;
-    if(state.not) document.getElementById('n-btn').classList.add('active');
-    applyT();
+    // Heartbeat to keep P2P connection alive (The AJAX replacement)
+    setInterval(() => { gun.get('heartbeat').put({time: Date.now()}); }, 20000);
+
+    // Initialization
+    document.getElementById('node-name').value = state.n;
+    document.getElementById('node-purge').value = state.p;
+    if(state.not) document.getElementById('notify-btn').classList.add('active');
+    applyTheme();
     lucide.createIcons();
 </script>
 </body>
