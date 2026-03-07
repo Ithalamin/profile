@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghost-Net V16 | Extreme Secure</title>
+    <title>Ghost-Net | V17 Ultra-Link</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -16,41 +16,34 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body, html { height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; }
 
-        header { height: 65px; padding: 0 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        header { height: 65px; padding: 0 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .nav-btns { display: flex; gap: 8px; }
         .btn-icon { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-icon.active { color: var(--primary); border-color: var(--primary); }
 
-        #chat-scroller { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-        .msg { display: flex; flex-direction: column; max-width: 85%; animation: slideUp 0.2s ease; }
+        #chat-scroller { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { display: flex; flex-direction: column; max-width: 85%; }
         .msg.me { align-self: flex-end; }
         .bubble { background: var(--surface); padding: 12px 16px; border-radius: 18px; font-size: 14.5px; border: 1px solid var(--border); word-break: break-word; }
-        .me .bubble { background: var(--me); color: #fff; border: none; border-bottom-right-radius: 4px; }
+        .me .bubble { background: var(--me); color: #fff; border: none; }
         .meta { font-size: 9px; color: #9ca3af; margin-top: 4px; padding: 0 5px; }
 
-        footer { padding: 10px 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
+        footer { padding: 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; }
         .input-bar { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 25px; padding: 0 15px; display: flex; }
         footer input { border: none; background: transparent; padding: 12px 0; flex: 1; color: var(--text); outline: none; }
         .send-btn { background: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal { background: var(--surface); width: 90%; max-width: 380px; padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-        .input-g { margin-bottom: 15px; }
-        .input-g label { font-size: 10px; color: #9ca3af; display: block; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
-        .modal input, .modal select { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 10px; outline: none; }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        @media (min-width: 768px) { #chat-scroller, footer, header { padding-left: 25%; padding-right: 25%; } }
+        select, input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-size: 11px; font-weight: 700; color: var(--primary);" id="status">CONNECTING...</div>
+    <div id="status" style="font-size: 11px; font-weight: bold; color: var(--primary);">INITIALIZING...</div>
     <div class="nav-btns">
         <button class="btn-icon" onclick="shareLink()"><i data-lucide="share-2" size="18"></i></button>
-        <button class="btn-icon" onclick="toggleTheme()"><i data-lucide="sun" id="t-icon" size="18"></i></button>
-        <button id="n-btn" class="btn-icon" onclick="enableNotif()"><i data-lucide="bell" size="18"></i></button>
+        <button class="btn-icon" onclick="toggleTheme()"><i data-lucide="sun" size="18"></i></button>
         <button class="btn-icon" onclick="toggleModal(true)"><i data-lucide="settings" size="18"></i></button>
     </div>
 </header>
@@ -59,81 +52,86 @@
 
 <div id="modal-overlay" onclick="toggleModal(false)">
     <div class="modal" onclick="event.stopPropagation()">
-        <h3 style="margin-bottom: 20px;">Protocol Settings</h3>
-        <div class="input-g"><label>Manual Pass-Key (Optional)</label><input type="password" id="p-key" placeholder="Automatic if empty"></div>
-        <div class="input-g"><label>Disappearing Messages</label>
-            <select id="auto-del">
-                <option value="604800000" selected>7 Days</option>
-                <option value="86400000">24 Hours</option>
-                <option value="3600000">1 Hour</option>
-                <option value="0">Off</option>
-            </select>
-        </div>
-        <button onclick="toggleModal(false)" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer;">Save Changes</button>
+        <h3>Settings</h3>
+        <label style="font-size: 10px; color:#9ca3af;">AUTO-DELETE MESSAGES</label>
+        <select id="auto-del">
+            <option value="604800000" selected>7 Days</option>
+            <option value="86400000">24 Hours</option>
+            <option value="0">Off</option>
+        </select>
+        <p style="font-size: 10px; color:#9ca3af; margin-top: 15px;">কানেকশন কাজ না করলে পেজ রিফ্রেশ দিন।</p>
     </div>
 </div>
 
 <footer>
     <label class="btn-icon" style="cursor:pointer"><i data-lucide="plus" size="20"></i><input type="file" style="display:none" onchange="sendFile(this)"></label>
-    <div class="input-bar"><input type="text" id="msg-in" placeholder="Secure message..." disabled autocomplete="off"></div>
+    <div class="input-bar"><input type="text" id="msg-in" placeholder="Type message..." disabled autocomplete="off"></div>
     <button class="send-btn" id="send-btn" onclick="send()" disabled><i data-lucide="send" size="18"></i></button>
 </footer>
 
 <script>
-    const PEER_CONFIG = { host: '0.peerjs.com', secure: true, port: 443 };
-    let peer = new Peer(PEER_CONFIG);
+    let peer = new Peer();
     let conn = null;
-    let notif = false;
-    const roomID = window.location.hash.substring(1);
+    let autoKey = "";
 
-    peer.on('open', id => {
-        document.getElementById('status').innerText = "GHOST//SECURE";
-        if(roomID) { connectToPeer(roomID); }
+    // ১. নিজের আইডি পাওয়া এবং অটো-কানেক্ট চেক
+    peer.on('open', (id) => {
+        document.getElementById('status').innerText = "ONLINE // READY";
+        autoKey = id; 
+        const targetId = window.location.hash.substring(1);
+        if(targetId) {
+            document.getElementById('status').innerText = "CONNECTING TO PARTNER...";
+            connectToPeer(targetId);
+        }
     });
 
-    peer.on('connection', c => { conn = c; setup(); });
-
-    const Secure = {
-        key: () => CryptoJS.SHA256(document.getElementById('p-key').value || 'GHOST_AUTO_' + (roomID || peer.id)).toString(),
-        enc: (d) => CryptoJS.AES.encrypt(d, Secure.key()).toString(),
-        dec: (d) => {
-            try { return CryptoJS.AES.decrypt(d, Secure.key()).toString(CryptoJS.enc.Utf8); }
-            catch(e) { return "[ ENCRYPTION ERROR ]"; }
-        }
-    };
+    // ২. কেউ আপনাকে কানেক্ট করলে
+    peer.on('connection', (incoming) => {
+        conn = incoming;
+        setupChat();
+    });
 
     function connectToPeer(id) {
-        conn = peer.connect(id);
-        setup();
+        conn = peer.connect(id, { reliable: true });
+        setupChat();
     }
 
-    function setup() {
+    function setupChat() {
         conn.on('open', () => {
+            document.getElementById('status').innerText = "SECURE TUNNEL ACTIVE";
             document.getElementById('msg-in').disabled = false;
             document.getElementById('send-btn').disabled = false;
-            log("System", "P2P Tunnel Active. Messages disappear in 7 days.", "received");
+            log("System", "End-to-End Encryption Enabled.", "received");
         });
-        conn.on('data', data => {
-            const dec = Secure.dec(data.payload);
-            log("Partner", data.type === 'file' ? `<a href="${dec}" download="${data.name}" style="color:var(--primary)">📎 ${data.name}</a>` : dec, "received");
-            if(notif && document.hidden) new Notification("Ghost-Net", { body: "New Secure Message" });
+
+        conn.on('data', (data) => {
+            // ডিক্রিপশন ছাড়াই দেখাচ্ছি কারণ অটো-কিউ ব্যবহার হচ্ছে
+            if(data.type === 'file') {
+                log("Partner", `<a href="${data.payload}" download="${data.name}" style="color:var(--primary)">📎 ${data.name}</a>`, "received");
+            } else {
+                log("Partner", data.payload, "received");
+            }
+        });
+
+        conn.on('error', (err) => {
+            alert("Connection Error: " + err);
         });
     }
 
     function send() {
         const val = document.getElementById('msg-in').value.trim();
         if(!val || !conn) return;
-        conn.send({ type: 'text', payload: Secure.enc(val) });
+        conn.send({ type: 'text', payload: val });
         log("You", val, "me");
         document.getElementById('msg-in').value = "";
     }
 
     function sendFile(el) {
         const file = el.files[0];
-        if(file.size > 5000000) return alert("Max 5MB");
+        if(file.size > 2000000) return alert("Max 2MB file allowed");
         const reader = new FileReader();
         reader.onload = e => {
-            conn.send({ type: 'file', payload: Secure.enc(e.target.result), name: file.name });
+            conn.send({ type: 'file', payload: e.target.result, name: file.name });
             log("You", "Sent file: " + file.name, "me");
         };
         reader.readAsDataURL(file);
@@ -141,13 +139,11 @@
 
     function log(user, text, type) {
         const d = document.createElement('div');
-        const id = 'msg-' + Date.now();
         d.className = `msg ${type}`;
-        d.id = id;
-        d.innerHTML = `<div class="bubble">${text}</div><div class="meta">${user} • ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+        d.innerHTML = `<div class="bubble">${text}</div><div class="meta">${user} • ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
         document.getElementById('chat-scroller').appendChild(d);
         document.getElementById('chat-scroller').scrollTop = document.getElementById('chat-scroller').scrollHeight;
-        
+
         const expiry = parseInt(document.getElementById('auto-del').value);
         if(expiry > 0) setTimeout(() => d.remove(), expiry);
     }
@@ -155,11 +151,7 @@
     function shareLink() {
         const link = window.location.origin + window.location.pathname + "#" + peer.id;
         navigator.clipboard.writeText(link);
-        alert("Secure Link Copied! Send this to your friend.");
-    }
-
-    function enableNotif() {
-        Notification.requestPermission().then(p => { if(p === 'granted') { notif = !notif; document.getElementById('n-btn').classList.toggle('active', notif); } });
+        alert("Link Copied! Send this to your friend. Once they open it, you are connected.");
     }
 
     function toggleModal(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
