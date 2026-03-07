@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat|room</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0b0e11; --surface: #1a1f24; --primary: #3b82f6; --text: #f3f4f6;
+            --text-dim: #9ca3af; --border: rgba(255,255,255,0.06); --me: #2563eb;
+        }
+
+        .light {
+            --bg: #f3f4f6; --surface: #ffffff; --primary: #2563eb; --text: #111827;
+            --text-dim: #6b7280; --border: rgba(0,0,0,0.1); --me: #3b82f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body, html { 
+            height: 100%; width: 100%; background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        /* HEADER - FULLY RESPONSIVE */
+        header {
+            min-height: 60px; padding: 0 15px; background: var(--surface);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); z-index: 100;
+        }
+        .room-tag { font-size: 11px; font-weight: 700; color: var(--primary); letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+        .actions { display: flex; gap: 8px; }
+
+        /* CIRCULAR MODERN BUTTONS */
+        .btn {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.9); }
+        .btn.on { color: var(--primary); border-color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+
+        /* CHAT AREA */
+        #scroller { 
+            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px;
+        }
+        .msg { display: flex; flex-direction: column; max-width: 85%; animation: msgIn 0.2s ease; }
+        .msg.me { align-self: flex-end; }
+        
+        .bubble { 
+            background: var(--surface); padding: 10px 14px; border-radius: 18px;
+            font-size: 14px; line-height: 1.4; border: 1px solid var(--border); word-break: break-word;
+        }
+        .me .bubble { background: var(--me); border: none; color: #fff; border-bottom-right-radius: 4px; }
+        .msg:not(.me) .bubble { border-bottom-left-radius: 4px; }
+
+        .info { font-size: 9px; color: var(--text-dim); margin-top: 4px; padding: 0 5px; }
+        .me .info { text-align: right; }
+
+        /* MODAL POPUP */
+        #overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+        }
+        #modal {
+            background: var(--surface); width: 100%; max-width: 350px; padding: 25px;
+            border-radius: 24px; border: 1px solid var(--border); animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .input-g { margin-bottom: 15px; }
+        .input-g label { font-size: 10px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        input, select { 
+            width: 100%; background: var(--bg); border: 1px solid var(--border); 
+            color: var(--text); padding: 12px; border-radius: 12px; outline: none; font-size: 14px;
+        }
+
+        /* FOOTER - MOBILE OPTIMIZED */
+        footer { 
+            padding: 10px 15px; background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; gap: 10px; align-items: center; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        }
+        .bar { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 25px; display: flex; align-items: center; padding: 0 15px; }
+        .bar input { border: none; background: transparent; padding: 10px 0; }
+        .send { background: var(--primary); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        
+        /* DESKTOP TWEAKS */
+        @media (min-width: 768px) {
+            .msg { max-width: 60%; }
+            #scroller { padding: 30px 15%; }
+            header { padding: 0 15%; }
+            footer { padding: 15px 15%; }
+            .room-tag { max-width: none; font-size: 13px; }
+        }
+    </style>
+</head>
+<body class="dark" id="body-app">
+
+<header>
+    <div class="room-tag" id="r-id">ROOM//SYNC</div>
+    <div class="actions">
+        <button class="btn" onclick="share()"><i data-lucide="share" size="16"></i></button>
+        <button class="btn" onclick="theme()"><i data-lucide="moon" id="t-ico" size="16"></i></button>
+        <button id="n-btn" class="btn" onclick="notif()"><i data-lucide="bell" size="16"></i></button>
+        <button class="btn" onclick="modal(true)"><i data-lucide="settings" size="16"></i></button>
+    </div>
+</header>
+
+<main id="scroller"></main>
+
+<div id="overlay" onclick="modal(false)">
+    <div id="modal" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 20px; font-size: 16px;">Node Settings</h3>
+        <div class="input-g"><label>Display Alias</label><input type="text" id="cfg-n" onchange="upd()"></div>
+        <div class="input-g"><label>Secret Key</label><input type="password" id="cfg-k" placeholder="Encryption key..."></div>
+        <div class="input-g"><label>Auto-Destruct</label>
+            <select id="cfg-p" onchange="upd()">
+                <option value="3600000">1 Hour</option>
+                <option value="86400000" selected>24 Hours</option>
+                <option value="0">Never</option>
+            </select>
+        </div>
+        <button onclick="nuke()" style="width:100%; padding:12px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid #ef4444; border-radius:12px; font-weight:600; cursor:pointer;">Nuke Cache</button>
+    </div>
+</div>
+
+<footer>
+    <label style="cursor:pointer"><i data-lucide="paperclip" size="20"></i><input type="file" id="f-in" style="display:none" onchange="sendFile(this)"></label>
+    <div class="bar"><input type="text" id="m-in" placeholder="Message..." autocomplete="off"></div>
+    <button class="send" onclick="send()"><i data-lucide="send" size="18"></i></button>
+</footer>
+
+<script>
+    const RID = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
+    document.getElementById('r-id').innerText = `ROOM//${RID.toUpperCase()}`;
+
+    const gun = Gun(['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun']);
+    const db = gun.get('ghost_v8_' + RID);
+
+    let state = JSON.parse(localStorage.getItem('ghost_v8_st')) || {
+        n: "User_" + Math.random().toString(36).substring(7).toUpperCase(),
+        p: 86400000,
+        not: false,
+        th: 'dark'
+    };
+
+    const Cry = {
+        k: () => CryptoJS.SHA256(RID + (document.getElementById('cfg-k').value || 'GHOST')).toString(),
+        enc: (obj) => LZString.compressToUTF16(CryptoJS.AES.encrypt(JSON.stringify(obj), Cry.k()).toString()),
+        dec: (blob) => {
+            try { return JSON.parse(CryptoJS.AES.decrypt(LZString.decompressFromUTF16(blob), Cry.k()).toString(CryptoJS.enc.Utf8)); }
+            catch(e) { return null; }
+        }
+    };
+
+    function modal(s) { document.getElementById('overlay').style.display = s ? 'flex' : 'none'; }
+    function upd() {
+        state.n = document.getElementById('cfg-n').value || state.n;
+        state.p = document.getElementById('cfg-p').value;
+        localStorage.setItem('ghost_v8_st', JSON.stringify(state));
+    }
+
+    function theme() {
+        state.th = state.th === 'dark' ? 'light' : 'dark';
+        apply(); upd();
+    }
+
+    function apply() {
+        document.getElementById('body-app').className = state.th;
+        const ico = document.getElementById('t-ico');
+        ico.setAttribute('data-lucide', state.th === 'dark' ? 'sun' : 'moon');
+        lucide.createIcons();
+    }
+
+    function notif() {
+        if (!("Notification" in window)) return alert("Not supported");
+        Notification.requestPermission().then(perm => {
+            if(perm === 'granted') {
+                state.not = !state.not;
+                document.getElementById('n-btn').classList.toggle('on', state.not);
+                upd();
+                if(state.not) new Notification("Ghost-Net", { body: "Notifications Enabled" });
+            }
+        });
+    }
+
+    const scr = document.getElementById('scroller');
+    db.map().once((data, id) => {
+        if(!data) return;
+        const m = Cry.dec(data.payload);
+        if(!m) return;
+
+        if (state.p != 0 && (Date.now() - m.ts) > parseInt(state.p)) { db.get(id).put(null); return; }
+
+        const d = document.createElement('div');
+        d.className = 'msg' + (m.s === state.n ? ' me' : '');
+        const val = m.t === 'txt' ? m.c : `<a href="${m.c}" download="${m.f}" style="color:inherit">📎 ${m.f}</a>`;
+        d.innerHTML = `<div class="bubble">${val}</div><div class="info">${m.s} • ${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
+        scr.appendChild(d);
+        scr.scrollTop = scr.scrollHeight;
+
+        if(state.not && document.hidden && m.s !== state.n) {
+            new Notification(`Message from ${m.s}`, { body: m.t === 'txt' ? m.c : "Shared a file" });
+        }
+    });
+
+    function send() {
+        const i = document.getElementById('m-in');
+        if(!i.value.trim()) return;
+        db.set({ payload: Cry.enc({ t: 'txt', c: i.value, s: state.n, ts: Date.now() }) });
+        i.value = '';
+    }
+
+    function sendFile(el) {
+        const file = el.files[0];
+        if (file.size > 1048576) return alert("Max 1MB");
+        const r = new FileReader();
+        r.onload = (e) => db.set({ payload: Cry.enc({ t: 'file', c: e.target.result, f: file.name, s: state.n, ts: Date.now() }) });
+        r.readAsDataURL(file);
+    }
+
+    function share() { navigator.clipboard.writeText(window.location.href); alert("Room Link Copied!"); }
+    function nuke() { if(confirm("Wipe cache?")) { localStorage.clear(); location.reload(); } }
+    
+    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'm-in') send(); };
+
+    // Init
+    document.getElementById('cfg-n').value = state.n;
+    document.getElementById('cfg-p').value = state.p;
+    if(state.not) document.getElementById('n-btn').classList.add('on');
+    apply();
+    lucide.createIcons();
+</script>
+</body>
+</html>
