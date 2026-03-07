@@ -3,121 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghost-Net Pro | V13 High-Stability</title>
+    <title>Room</title>
     
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg: #0b0e11; --surface: #1a1f24; --primary: #3b82f6; --text: #f3f4f6;
-            --text-dim: #9ca3af; --border: rgba(255,255,255,0.06); --me: #2563eb;
+            --bg: #05070a; --surface: #0f1218; --primary: #00ff41; --text: #e0e0e0;
+            --border: #1a1f26; --me: #003b00;
         }
-
         .light-mode {
-            --bg: #f9fafb; --surface: #ffffff; --primary: #2563eb; --text: #111827;
-            --text-dim: #6b7280; --border: rgba(0,0,0,0.08); --me: #3b82f6;
+            --bg: #ffffff; --surface: #f0f2f5; --primary: #007bff; --text: #1c1e21;
+            --border: #ddd; --me: #007bff;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; margin: 0; padding: 0; transition: background 0.3s; }
-        
-        body { 
-            background: var(--bg); color: var(--text); height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        /* HEADER */
         header {
-            height: 65px; padding: 0 20px; background: var(--surface);
+            height: 60px; padding: 0 15px; background: var(--surface);
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); z-index: 100;
+            border-bottom: 1px solid var(--border); border-top: 2px solid var(--primary);
         }
-        .status-area { display: flex; flex-direction: column; }
-        .my-id { font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 1px; cursor: pointer; }
-        .conn-stat { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-top: 2px; }
-
-        .nav-actions { display: flex; gap: 10px; }
+        .id-label { font-size: 10px; color: var(--primary); text-shadow: 0 0 5px var(--primary); font-weight: bold; }
+        .nav { display: flex; gap: 10px; }
         .btn-icon { 
-            background: var(--bg); border: 1px solid var(--border); color: var(--text); 
-            width: 38px; height: 38px; border-radius: 12px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            background: transparent; border: 1px solid var(--border); color: var(--text); 
+            width: 35px; height: 35px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .btn-icon:hover { border-color: var(--primary); }
+        .btn-icon:hover { border-color: var(--primary); box-shadow: 0 0 8px var(--primary); }
 
-        /* CHAT WINDOW */
-        #chat-scroller { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { display: flex; flex-direction: column; max-width: 80%; animation: fadeIn 0.2s ease; }
-        .msg.me { align-self: flex-end; }
-        
-        .bubble { 
-            background: var(--surface); padding: 12px 16px; border-radius: 18px;
-            font-size: 14.5px; line-height: 1.5; border: 1px solid var(--border);
-        }
-        .me .bubble { background: var(--me); border: none; color: #fff; border-bottom-right-radius: 4px; }
-        .msg:not(.me) .bubble { border-bottom-left-radius: 4px; }
+        #chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,65,0.02) 1px, rgba(0,255,65,0.02) 2px); }
+        .msg { max-width: 85%; padding: 10px; border-radius: 4px; font-size: 13px; border: 1px solid var(--border); position: relative; }
+        .msg.me { align-self: flex-end; background: var(--me); border-color: var(--primary); color: #00ff41; }
+        .msg.received { align-self: flex-start; background: var(--surface); }
 
-        /* MODAL POPUP */
-        #overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
-            display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
-        }
         #modal {
-            background: var(--surface); width: 100%; max-width: 380px; padding: 30px;
-            border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
+            display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
-        .m-input { 
-            width: 100%; background: var(--bg); border: 1px solid var(--border); 
-            color: var(--text); padding: 12px; border-radius: 12px; outline: none; font-size: 14px;
-        }
+        .modal-box { background: var(--surface); width: 90%; max-width: 400px; padding: 25px; border: 1px solid var(--primary); border-radius: 5px; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: var(--primary); padding: 12px; margin-top: 10px; outline: none; }
 
-        /* FOOTER */
-        footer { padding: 15px 20px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
-        .input-pill { 
-            flex: 1; background: var(--bg); border: 1px solid var(--border); 
-            color: var(--text); padding: 12px 18px; border-radius: 20px; outline: none; font-size: 15px;
-        }
-        .send-btn { 
-            background: var(--primary); color: #fff; border: none; width: 45px; height: 45px;
-            border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-        }
+        footer { padding: 10px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+        .input-box { flex: 1; background: #000; border: 1px solid var(--border); padding: 10px; color: var(--primary); outline: none; border-radius: 4px; }
+        .send-btn { background: var(--primary); color: #000; border: none; padding: 10px 15px; font-weight: bold; cursor: pointer; border-radius: 4px; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @media (min-width: 768px) { #chat-scroller, footer, header { padding-left: 20%; padding-right: 20%; } }
+        @media (min-width: 768px) { #chat, footer, header { padding-left: 25%; padding-right: 25%; } }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="status-area">
-        <div class="my-id" id="display-id" onclick="copyID()">GENERATING ID...</div>
-        <div class="conn-stat" id="peer-stat">OFFLINE</div>
-    </div>
-    <div class="nav-actions">
-        <button class="btn-icon" onclick="toggleTheme()"><i data-lucide="sun" id="t-icon" size="18"></i></button>
-        <button class="btn-icon" onclick="toggleModal(true)"><i data-lucide="link-2" size="18"></i></button>
+    <div class="id-label" id="my-id" onclick="copyID()">[ INITIALIZING SECURE NODE... ]</div>
+    <div class="nav">
+        <button class="btn-icon" onclick="copyID()"><i data-lucide="share-2" size="16"></i></button>
+        <button class="btn-icon" onclick="toggleTheme()"><i data-lucide="zap" size="16"></i></button>
+        <button class="btn-icon" onclick="toggleModal(true)"><i data-lucide="terminal" size="16"></i></button>
     </div>
 </header>
 
-<main id="chat-scroller"></main>
+<main id="chat"></main>
 
-<div id="overlay" onclick="toggleModal(false)">
-    <div id="modal" onclick="event.stopPropagation()">
-        <h3 style="margin-bottom: 20px;">Connect to Node</h3>
-        <div class="input-group">
-            <label>Remote Peer ID</label>
-            <input type="text" id="peer-input" class="m-input" placeholder="Paste friend's ID here...">
-        </div>
-        <button onclick="connectToPeer()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer;">Establish Connection</button>
-        <p style="font-size: 10px; color: var(--text-dim); margin-top: 15px; text-align: center;">ID কপি করে বন্ধুকে দিন এবং বন্ধুর আইডি এখানে পেস্ট করে কানেক্ট করুন।</p>
+<div id="modal" onclick="toggleModal(false)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <h3 style="color:var(--primary)">SECURE HANDSHAKE</h3>
+        <input type="text" id="target-id" placeholder="PARTNER PEER ID">
+        <input type="password" id="secret-key" placeholder="QUANTUM PASS-KEY (MUST MATCH)">
+        <button onclick="connect()" style="width:100%; margin-top:15px; background:var(--primary); padding:10px; border:none; cursor:pointer; font-weight:bold;">ESTABLISH TUNNEL</button>
     </div>
 </div>
 
 <footer>
-    <input type="text" id="msg-input" class="input-pill" placeholder="Type a message..." disabled>
-    <button class="send-btn" id="send-btn" onclick="send()" disabled><i data-lucide="send" size="20"></i></button>
+    <label class="btn-icon" style="cursor:pointer">
+        <i data-lucide="plus" size="20"></i>
+        <input type="file" id="file-in" style="display:none" onchange="sendFile(this)">
+    </label>
+    <input type="text" id="msg-in" class="input-box" placeholder="ENCRYPTED TRAFFIC..." disabled>
+    <button class="send-btn" id="send-btn" onclick="send()" disabled>SEND</button>
 </footer>
 
 <script>
@@ -125,85 +89,79 @@
     let conn = null;
     let theme = 'dark';
 
-    const scroller = document.getElementById('chat-scroller');
-    const msgInput = document.getElementById('msg-input');
-    const sendBtn = document.getElementById('send-btn');
+    peer.on('open', id => document.getElementById('my-id').innerText = `NODE//${id.toUpperCase()}`);
+    peer.on('connection', c => { conn = c; setup(); });
 
-    // 1. Peer Initialization
-    peer.on('open', (id) => {
-        document.getElementById('display-id').innerText = "ID: " + id;
-        document.getElementById('peer-stat').innerText = "READY // WAITING";
-    });
+    const CryptoProtocol = {
+        getKey: () => CryptoJS.SHA512(document.getElementById('secret-key').value || 'GHOST_NULL').toString(),
+        encrypt: (data) => CryptoJS.AES.encrypt(data, CryptoProtocol.getKey()).toString(),
+        decrypt: (data) => {
+            try { return CryptoJS.AES.decrypt(data, CryptoProtocol.getKey()).toString(CryptoJS.enc.Utf8); }
+            catch(e) { return "[ DECRYPTION FAILED: KEY MISMATCH ]"; }
+        }
+    };
 
-    // 2. Handling Incoming Connection
-    peer.on('connection', (c) => {
-        conn = c;
-        setupEvents();
-    });
-
-    // 3. Manual Connection
-    function connectToPeer() {
-        const id = document.getElementById('peer-input').value.trim();
-        if(!id) return;
+    function connect() {
+        const id = document.getElementById('target-id').value;
         conn = peer.connect(id);
-        setupEvents();
+        setup();
         toggleModal(false);
     }
 
-    function setupEvents() {
+    function setup() {
         conn.on('open', () => {
-            document.getElementById('peer-stat').innerText = "CONNECTED // SECURE";
-            msgInput.disabled = false;
-            sendBtn.disabled = false;
-            appendMsg("System", "P2P Tunnel Established.", "received");
+            document.getElementById('msg-in').disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            log("TUNNEL ESTABLISHED: E2EE ACTIVE", "me");
         });
-
-        conn.on('data', (data) => {
-            appendMsg("Friend", data, "received");
-            if(Notification.permission === 'granted' && document.hidden) {
-                new Notification("Ghost-Net", { body: data });
+        conn.on('data', data => {
+            const dec = CryptoProtocol.decrypt(data.payload);
+            if(data.type === 'file') {
+                log(`FILE RECEIVED: <a href="${dec}" download="${data.name}" style="color:var(--primary)">${data.name}</a>`, "received");
+            } else {
+                log(dec, "received");
             }
-        });
-
-        conn.on('close', () => {
-            document.getElementById('peer-stat').innerText = "DISCONNECTED";
-            msgInput.disabled = true;
         });
     }
 
     function send() {
-        const val = msgInput.value.trim();
-        if(val && conn && conn.open) {
-            conn.send(val);
-            appendMsg("You", val, "me");
-            msgInput.value = "";
-        }
+        const val = document.getElementById('msg-in').value;
+        if(!val || !conn) return;
+        conn.send({ type: 'text', payload: CryptoProtocol.encrypt(val) });
+        log(val, "me");
+        document.getElementById('msg-in').value = "";
     }
 
-    function appendMsg(sender, text, type) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerHTML = `<div class="bubble">${text}</div><div style="font-size:9px; color:var(--text-dim); margin-top:4px; padding:0 5px;">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
-        scroller.appendChild(div);
-        scroller.scrollTop = scroller.scrollHeight;
+    function sendFile(el) {
+        const file = el.files[0];
+        if(file.size > 2000000) return alert("MAX 2MB");
+        const reader = new FileReader();
+        reader.onload = e => {
+            conn.send({ type: 'file', payload: CryptoProtocol.encrypt(e.target.result), name: file.name });
+            log(`FILE SENT: ${file.name}`, "me");
+        };
+        reader.readAsDataURL(file);
     }
 
-    // UI HELPER FUNCTIONS
-    function toggleModal(s) { document.getElementById('overlay').style.display = s ? 'flex' : 'none'; }
+    function log(m, type) {
+        const d = document.createElement('div');
+        d.className = `msg ${type}`;
+        d.innerHTML = `<div>${m}</div><div style="font-size:8px; opacity:0.5; margin-top:5px;">${new Date().toLocaleTimeString()}</div>`;
+        document.getElementById('chat').appendChild(d);
+        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+    }
+
+    function toggleModal(s) { document.getElementById('modal').style.display = s ? 'flex' : 'none'; }
     function copyID() {
-        const id = document.getElementById('display-id').innerText.replace("ID: ", "");
+        const id = document.getElementById('my-id').innerText.replace("NODE//", "");
         navigator.clipboard.writeText(id);
-        alert("ID Copied! Send this to your peer.");
+        alert("NODE ID COPIED. SHARE SECURELY.");
     }
     function toggleTheme() {
         theme = theme === 'dark' ? 'light' : 'dark';
-        document.body.classList.toggle('light-mode', theme === 'light');
-        document.getElementById('t-icon').setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
-        lucide.createIcons();
+        document.body.className = theme === 'light' ? 'light-mode' : '';
     }
-
-    Notification.requestPermission();
-    window.onkeydown = (e) => { if(e.key === "Enter") send(); };
+    window.onkeydown = e => { if(e.key === "Enter") send(); };
     lucide.createIcons();
 </script>
 </body>
