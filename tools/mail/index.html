@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREMIUM TEMP MAIL | PRO</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg: #000; --fg: #fff; --card: #0a0a0a; --border: #222; --accent: #888;
+        }
+        .light-mode {
+            --bg: #f5f5f5; --fg: #000; --card: #fff; --border: #ddd; --accent: #555;
+        }
+        
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+        body { 
+            background: var(--bg); color: var(--fg); 
+            font-family: -apple-system, system-ui, sans-serif; 
+            margin: 0; padding: 10px; display: flex; justify-content: center; 
+        }
+
+        .container { 
+            width: 100%; max-width: 600px; background: var(--card); 
+            border: 1px solid var(--border); min-height: 90vh; 
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        header { 
+            padding: 15px; border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .logo { font-size: 0.9rem; font-weight: 900; letter-spacing: 2px; }
+
+        .address-box { padding: 30px 15px; text-align: center; border-bottom: 1px solid var(--border); }
+        #addr { 
+            display: block; font-size: 1.1rem; font-weight: bold; 
+            margin-bottom: 15px; word-break: break-all; opacity: 0.9;
+        }
+
+        /* BUTTON IN ONE LINE */
+        .btn-row { 
+            display: flex; gap: 8px; justify-content: center; overflow-x: auto; padding: 5px;
+        }
+        .btn-row button { 
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+            background: var(--fg); color: var(--bg); border: none; 
+            padding: 12px 5px; cursor: pointer; font-size: 0.7rem; font-weight: bold;
+            min-width: 80px;
+        }
+        .btn-row button:active { transform: scale(0.95); }
+
+        .inbox-area { flex-grow: 1; padding: 15px; }
+        .mail-card { 
+            border: 1px solid var(--border); padding: 15px; margin-bottom: 10px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .mail-card:hover { border-color: var(--fg); background: rgba(128,128,128,0.05); }
+        .m-info { font-size: 0.8rem; }
+        .m-sub { font-weight: bold; font-size: 0.9rem; margin-top: 3px; }
+
+        /* Theme Toggle Icon (iPhone Style) */
+        .theme-btn { cursor: pointer; padding: 5px; border-radius: 50%; }
+
+        /* Mail Viewer */
+        #viewer { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg); z-index: 1000; display: none; padding: 20px; 
+        }
+        .close-view { 
+            background: var(--fg); color: var(--bg); padding: 10px 20px; 
+            float: right; font-weight: bold; cursor: pointer; margin-bottom: 20px; 
+        }
+        .mail-body { margin-top: 60px; padding: 20px; border: 1px solid var(--border); line-height: 1.5; }
+
+        @media (max-width: 400px) {
+            .logo { font-size: 0.7rem; }
+            #addr { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo">GHOST_SYSTEM</div>
+        <div class="theme-btn" onclick="toggleTheme()" id="theme-icon">
+            <i data-lucide="moon"></i>
+        </div>
+    </header>
+
+    <div class="address-box">
+        <span id="addr">GENERATING...</span>
+        <div class="btn-row">
+            <button onclick="copyAddr()"><i data-lucide="copy" size="14"></i> COPY</button>
+            <button onclick="generateNew()"><i data-lucide="refresh-cw" size="14"></i> NEW</button>
+            <button onclick="checkInbox()"><i data-lucide="inbox" size="14"></i> INBOX</button>
+        </div>
+    </div>
+
+    <div class="inbox-area" id="inbox-list">
+        <p style="text-align:center; color:var(--accent); font-size:0.8rem;">Waiting for incoming data...</p>
+    </div>
+</div>
+
+<div id="viewer">
+    <div class="close-view" onclick="closeMail()">BACK</div>
+    <div id="full-content"></div>
+</div>
+
+<script>
+    let login = "", domain = "";
+    const API = "https://www.1secmail.com/api/v1/action";
+
+    // ১. THEME (iPhone Style)
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const icon = document.getElementById('theme-icon');
+        if (document.body.classList.contains('light-mode')) {
+            icon.innerHTML = '<i data-lucide="sun"></i>';
+        } else {
+            icon.innerHTML = '<i data-lucide="moon"></i>';
+        }
+        lucide.createIcons();
+    }
+
+    // ২. EMAIL GENERATE
+    async function generateNew() {
+        const domains = ["1secmail.com", "1secmail.net", "1secmail.org", "esiix.com", "wwjmp.com"];
+        domain = domains[Math.floor(Math.random() * domains.length)];
+        login = Math.random().toString(36).substring(2, 10);
+        document.getElementById('addr').innerText = `${login}@${domain}`;
+        document.getElementById('inbox-list').innerHTML = '<p style="text-align:center; color:var(--accent); font-size:0.8rem;">Listening for messages...</p>';
+    }
+
+    // ৩. CHECK INBOX
+    async function checkInbox() {
+        if (!login) return;
+        const res = await fetch(`${API}?action=getMessages&login=${login}&domain=${domain}`);
+        const data = await res.json();
+        const list = document.getElementById('inbox-list');
+        
+        if (data.length === 0) return;
+        list.innerHTML = "";
+        data.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'mail-card';
+            div.innerHTML = `<div class="m-info"><b>${m.from}</b><div class="m-sub">${m.subject}</div></div><i data-lucide="chevron-right"></i>`;
+            div.onclick = () => readMail(m.id);
+            list.appendChild(div);
+        });
+        lucide.createIcons();
+    }
+
+    // ৪. READ MAIL
+    async function readMail(id) {
+        const res = await fetch(`${API}?action=readMessage&login=${login}&domain=${domain}&id=${id}`);
+        const d = await res.json();
+        document.getElementById('viewer').style.display = "block";
+        document.getElementById('full-content').innerHTML = `
+            <h3>${d.subject}</h3><p style="color:var(--accent)">From: ${d.from}</p><hr border="1" style="border-color:var(--border)">
+            <div class="mail-body">${d.textBody || d.htmlBody}</div>`;
+    }
+
+    function closeMail() { document.getElementById('viewer').style.display = "none"; }
+    
+    function copyAddr() {
+        navigator.clipboard.writeText(`${login}@${domain}`);
+        alert("COPIED!");
+    }
+
+    generateNew();
+    setInterval(checkInbox, 5000);
+    lucide.createIcons();
+</script>
+
+</body>
+</html>
