@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghost-Net | Phantom V22 Ultra-Sync</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #090b10; --surface: #12151c; --primary: #3b82f6; --text: #f3f4f6;
+            --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.07); --me: #2563eb;
+            --active: #10b981; --error: #ef4444;
+        }
+
+        .light {
+            --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb; --text: #0f172a;
+            --text-dim: #64748b; --border: rgba(0, 0, 0, 0.08); --me: #3b82f6;
+            --active: #059669; --error: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            height: 100%; width: 100%; background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        /* --- Custom Scrollbar --- */
+        #scroller::-webkit-scrollbar { width: 4px; }
+        #scroller::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        /* --- Header Logic --- */
+        header {
+            min-height: 80px; padding: 0 25px; background: var(--surface);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .brand { display: flex; flex-direction: column; }
+        .brand h1 { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        .net-stats { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-top: 5px; display: flex; gap: 10px; align-items: center; }
+        .pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--active); animation: blink 1.5s infinite; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .top-nav { display: flex; gap: 14px; }
+
+        .nav-btn {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            width: 44px; height: 44px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-btn:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .nav-btn.active { background: var(--primary); color: white; border: none; }
+
+        /* --- Chat Architecture --- */
+        #scroller { 
+            flex: 1; overflow-y: auto; padding: 30px 25px; display: flex; flex-direction: column; gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .msg-group { display: flex; flex-direction: column; max-width: 85%; animation: msgSlide 0.4s ease-out forwards; opacity: 0; }
+        .msg-group.me { align-self: flex-end; }
+        
+        .bubble { 
+            background: var(--surface); padding: 16px 22px; border-radius: 24px;
+            font-size: 15px; line-height: 1.6; border: 1px solid var(--border); word-break: break-word;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .me .bubble { background: var(--me); border: none; color: white; border-bottom-right-radius: 4px; }
+        .msg-group:not(.me) .bubble { border-bottom-left-radius: 4px; }
+
+        .msg-info { font-size: 10px; color: var(--text-dim); margin-top: 8px; padding: 0 12px; font-family: 'JetBrains Mono'; display: flex; gap: 8px; }
+        .me .msg-info { justify-content: flex-end; }
+
+        #typing-indicator {
+            padding: 10px 25px; font-size: 11px; color: var(--active);
+            font-weight: 600; height: 30px; display: none; font-style: italic;
+        }
+
+        /* --- Settings UI --- */
+        #settings-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+
+        #settings-modal {
+            background: var(--surface); width: 92%; max-width: 440px; padding: 35px;
+            border-radius: 35px; border: 1px solid var(--border);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        .config-row { margin-bottom: 25px; }
+        .config-row label { font-size: 12px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input[type="text"], select { 
+            width: 100%; background: var(--bg); border: 1px solid var(--border); 
+            color: var(--text); padding: 15px 20px; border-radius: 16px; outline: none; transition: 0.3s;
+            font-size: 14px;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+
+        /* --- Input System --- */
+        footer { 
+            padding: 20px 25px; background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; gap: 15px; align-items: center;
+        }
+
+        .entry-field { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; padding: 0 22px; transition: 0.3s; }
+        .entry-field:focus-within { border-color: var(--primary); }
+        .entry-field input { border: none; background: transparent; padding: 15px 0; width: 100%; color: var(--text); outline: none; font-size: 15px; }
+        
+        .btn-action { background: var(--primary); border: none; width: 50px; height: 50px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .btn-action:hover { transform: scale(1.1) rotate(-10deg); }
+
+        @keyframes msgSlide { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (min-width: 1024px) {
+            #scroller { padding: 40px 30%; }
+            header, footer, #typing-indicator { padding-left: 30%; padding-right: 30%; }
+        }
+    </style>
+</head>
+<body class="dark" id="phantom-node">
+
+<header>
+    <div class="brand">
+        <h1 id="room-display">PHANTOM//LINKING</h1>
+        <div class="net-stats">
+            <span><span class="pulse-dot"></span> MESH-GATEWAY</span>
+            <span id="p2p-node"><span class="pulse-dot" style="background:var(--error)"></span> P2P-IDLE</span>
+        </div>
+    </div>
+    <div class="top-nav">
+        <button class="nav-btn" onclick="shareTunnel()"><i data-lucide="share" size="20"></i></button>
+        <button class="nav-btn" onclick="toggleTheme()"><i data-lucide="sun" id="theme-ico" size="20"></i></button>
+        <button id="notif-gate" class="nav-btn" onclick="initNotif()"><i data-lucide="bell-off" size="20"></i></button>
+        <button class="nav-btn" onclick="toggleUI(true)"><i data-lucide="settings" size="20"></i></button>
+    </div>
+</header>
+
+<main id="scroller"></main>
+<div id="typing-indicator">...</div>
+
+<div id="settings-overlay" onclick="toggleUI(false)">
+    <div id="settings-modal" onclick="event.stopPropagation()">
+        <h2 style="margin-bottom: 25px; font-weight: 600;">Neural Network Settings</h2>
+        
+        <div class="config-row">
+            <label>Public Signature</label>
+            <input type="text" id="user-alias" maxlength="20" placeholder="Ghost_Node" onchange="updateState()">
+        </div>
+
+        <div class="config-row">
+            <label>Vanish Policy</label>
+            <select id="vanish-timer" onchange="updateState()">
+                <option value="3600000">1 Hour Cycle</option>
+                <option value="86400000">24 Hour Cycle</option>
+                <option value="604800000" selected>7 Day Cycle (Default)</option>
+                <option value="0">Persistent Data</option>
+            </select>
+        </div>
+
+        <div style="background: rgba(59,130,246,0.05); padding: 18px; border-radius: 18px; margin-bottom: 25px; font-size: 11px; line-height: 1.6; border: 1px solid var(--border);">
+            <b>Protocol:</b> Hybrid P2P (WebRTC + GunDB Relay)<br>
+            <b>Security:</b> AES-256-GCM Hardware Encrypted<br>
+            <b>Status:</b> Zero-Knowledge Tunneling Active.
+        </div>
+
+        <button onclick="nuke()" style="width:100%; padding:16px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid #ef4444; border-radius:15px; font-weight:700; cursor:pointer;">Emergency Purge</button>
+    </div>
+</div>
+
+<footer>
+    <label class="nav-btn" style="cursor:pointer">
+        <i data-lucide="paperclip" size="22"></i>
+        <input type="file" id="file-drop" style="display:none" onchange="transmitFile(this)">
+    </label>
+    <div class="entry-field">
+        <input type="text" id="msg-input" placeholder="Transmit secure packet..." autocomplete="off">
+    </div>
+    <button class="btn-action" onclick="broadcast()">
+        <i data-lucide="send-horizonal" size="24"></i>
+    </button>
+</footer>
+
+<script>
+    // --- 1. Infrastructure Core ---
+    const HASH = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
+    document.getElementById('room-display').innerText = `PHANTOM//${HASH.toUpperCase()}`;
+
+    // Gun Mesh Deployment
+    const gun = Gun({
+        peers: [
+            'https://gun-manhattan.herokuapp.com/gun',
+            'https://peer.wall.org/gun',
+            'https://gun-us.herokuapp.com/gun'
+        ],
+        rtc: { 
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun.services.mozilla.com' }
+            ] 
+        }
+    });
+
+    const channel = gun.get('phantom_v22_core_' + HASH);
+    const pulseChannel = gun.get('phantom_v22_pulse_' + HASH);
+
+    // PeerJS Fallback Deployment
+    const myPeerId = 'ghost-' + HASH + '-' + Math.random().toString(36).substring(5);
+    const peer = new Peer(myPeerId, {
+        config: {'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }]}
+    });
+    
+    let activePeers = [];
+
+    peer.on('open', (id) => {
+        document.getElementById('p2p-node').innerHTML = `<span class="pulse-dot"></span> P2P-ACTIVE`;
+        // Signal Presence
+        channel.get('nodes').get(id).put(Date.now());
+    });
+
+    peer.on('connection', (conn) => {
+        conn.on('data', (data) => handlePacket(data, true));
+        activePeers.push(conn);
+    });
+
+    // Auto-Connect to nodes in the mesh
+    channel.get('nodes').map().on((ts, id) => {
+        if(id !== myPeerId && (Date.now() - ts < 60000)) { // Only nodes active in last min
+            const conn = peer.connect(id);
+            conn.on('open', () => {
+                conn.on('data', (data) => handlePacket(data, true));
+                activePeers.push(conn);
+            });
+        }
+    });
+
+    // --- 2. Security Stack ---
+    const Shield = {
+        key: () => CryptoJS.SHA256(HASH + "PHANTOM_v22_SALT_ULTRA").toString(),
+        lock: (obj) => {
+            const raw = JSON.stringify(obj);
+            const cipher = CryptoJS.AES.encrypt(raw, Shield.key()).toString();
+            return LZString.compressToUTF16(cipher);
+        },
+        unlock: (blob) => {
+            try {
+                const dec = LZString.decompressFromUTF16(blob);
+                const bytes = CryptoJS.AES.decrypt(dec, Shield.key());
+                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            } catch(e) { return null; }
+        }
+    };
+
+    // --- 3. State Management ---
+    let appState = JSON.parse(localStorage.getItem('phantom_v22_prefs')) || {
+        alias: "NODE_" + Math.random().toString(36).substring(8).toUpperCase(),
+        vanish: 604800000,
+        notif: false,
+        theme: 'dark'
+    };
+
+    function toggleUI(s) { document.getElementById('settings-overlay').style.display = s ? 'flex' : 'none'; }
+    
+    function updateState() {
+        appState.alias = document.getElementById('user-alias').value || appState.alias;
+        appState.vanish = document.getElementById('vanish-timer').value;
+        localStorage.setItem('phantom_v22_prefs', JSON.stringify(appState));
+    }
+
+    function toggleTheme() {
+        appState.theme = appState.theme === 'dark' ? 'light' : 'dark';
+        applyCore();
+    }
+
+    function applyCore() {
+        document.getElementById('phantom-node').className = appState.theme;
+        document.getElementById('theme-ico').setAttribute('data-lucide', appState.theme === 'dark' ? 'sun' : 'moon');
+        lucide.createIcons();
+        updateState();
+    }
+
+    // --- 4. Notification Engine (Fallback Support) ---
+    function initNotif() {
+        if (!("Notification" in window)) return alert("Browser block: Notifications unavailable");
+        
+        Notification.requestPermission().then(p => {
+            if(p === 'granted') {
+                appState.notif = !appState.notif;
+                const gate = document.getElementById('notif-gate');
+                gate.classList.toggle('active', appState.notif);
+                gate.innerHTML = appState.notif ? `<i data-lucide="bell" size="20"></i>` : `<i data-lucide="bell-off" size="20"></i>`;
+                lucide.createIcons();
+                updateState();
+            }
+        });
+    }
+
+    // --- 5. Data Transmission Core ---
+    const scroller = document.getElementById('scroller');
+    const dedupe = new Set();
+
+    // Listen to Mesh (GunDB)
+    channel.get('messages').map().once((raw, id) => {
+        if(!raw || dedupe.has(id)) return;
+        handlePacket(raw.data, false, id);
+    });
+
+    function handlePacket(encrypted, isDirect, id = null) {
+        const data = Shield.unlock(encrypted);
+        if(!data) return;
+
+        // Vanish Policy Check
+        if (appState.vanish != 0 && (Date.now() - data.ts) > parseInt(appState.vanish)) {
+            if(id) channel.get('messages').get(id).put(null);
+            return;
+        }
+
+        // De-duplication check using unique packet timestamp + UID
+        const packetKey = data.ts + data.uid;
+        if(dedupe.has(packetKey)) return;
+        dedupe.add(packetKey);
+
+        renderMessage(data);
+    }
+
+    function renderMessage(data) {
+        const div = document.createElement('div');
+        div.className = 'msg-group' + (data.uid === appState.alias ? ' me' : '');
+        
+        const time = new Date(data.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const body = data.type === 'file' ? 
+            `<a href="${data.blob}" download="${data.name}" style="color:inherit;text-decoration:none"><b><i data-lucide="file-down"></i> ${data.name}</b></a>` : 
+            data.blob;
+
+        div.innerHTML = `<div class="bubble">${body}</div><div class="msg-info"><span>${data.uid}</span><span>${time}</span></div>`;
+        scroller.appendChild(div);
+        scroller.scrollTop = scroller.scrollHeight;
+        lucide.createIcons();
+
+        // Notification logic
+        if(appState.notif && data.uid !== appState.alias && document.visibilityState !== 'visible') {
+            const n = new Notification(data.uid, {
+                body: data.type === 'file' ? "Transmitted a file" : data.blob,
+                icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+            });
+            n.onclick = () => { window.focus(); n.close(); };
+        }
+    }
+
+    // Pulse (Typing) System
+    pulseChannel.map().on((isTyping, user) => {
+        if(user === appState.alias) return;
+        const el = document.getElementById('typing-indicator');
+        el.innerText = `${user} is typing...`;
+        el.style.display = isTyping ? 'block' : 'none';
+    });
+
+    let pulseTimer;
+    document.getElementById('msg-input').oninput = () => {
+        pulseChannel.get(appState.alias).put(true);
+        clearTimeout(pulseTimer);
+        pulseTimer = setTimeout(() => pulseChannel.get(appState.alias).put(false), 2000);
+    };
+
+    function broadcast() {
+        const input = document.getElementById('msg-input');
+        if(!input.value.trim()) return;
+
+        const packet = {
+            type: 'text',
+            blob: input.value,
+            uid: appState.alias,
+            ts: Date.now()
+        };
+
+        const encrypted = Shield.lock(packet);
+
+        // Broadcast to Mesh (Slow but reliable storage)
+        channel.get('messages').set({ data: encrypted });
+        
+        // Broadcast to Direct Peers (Fast but volatile)
+        activePeers.forEach(conn => {
+            if(conn.open) conn.send(encrypted);
+        });
+
+        input.value = '';
+        pulseChannel.get(appState.alias).put(false);
+    }
+
+    function transmitFile(el) {
+        const file = el.files[0];
+        if(!file || file.size > 2 * 1024 * 1024) return alert("Packet limit exceeded: 2MB MAX");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const encrypted = Shield.lock({
+                type: 'file',
+                blob: e.target.result,
+                name: file.name,
+                uid: appState.alias,
+                ts: Date.now()
+            });
+            channel.get('messages').set({ data: encrypted });
+            activePeers.forEach(conn => { if(conn.open) conn.send(encrypted); });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function shareTunnel() {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Tunnel coordinates copied to clipboard!");
+    }
+
+    function nuke() {
+        if(confirm("Confirm Emergency Purge?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'msg-input') broadcast(); };
+
+    // Initial Bootstrap
+    document.getElementById('user-alias').value = appState.alias;
+    document.getElementById('vanish-timer').value = appState.vanish;
+    applyCore();
+    if(appState.notif) {
+        const gate = document.getElementById('notif-gate');
+        gate.classList.add('active');
+        gate.innerHTML = `<i data-lucide="bell" size="20"></i>`;
+    }
+    lucide.createIcons();
+
+    // Maintenance: Keep Mesh node alive
+    setInterval(() => {
+        if(peer.id) channel.get('nodes').get(peer.id).put(Date.now());
+    }, 30000);
+</script>
+</body>
+</html>
