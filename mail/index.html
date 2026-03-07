@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEMP_MAIL </title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --bg: #000; --fg: #fff; --card: #0a0a0a; --border: #222; --accent: #888; --green: #00ff00; }
+        .light-mode { --bg: #f5f5f5; --fg: #000; --card: #fff; --border: #ddd; --accent: #555; --green: #008000; }
+        
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { 
+            background: var(--bg); color: var(--fg); font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+
+        .container { 
+            width: 100%; max-width: 650px; background: var(--card); border: 2px solid var(--border); 
+            display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        header { 
+            padding: 20px; border-bottom: 2px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .logo { font-size: 1.1rem; font-weight: 900; letter-spacing: 3px; display: flex; align-items: center; gap: 10px; }
+
+        /* menu */
+        .nav-right { display: flex; align-items: center; gap: 20px; }
+        .menu-icon { cursor: pointer; padding: 5px; }
+
+        .address-section { padding: 50px 20px; text-align: center; border-bottom: 2px solid var(--border); background: rgba(255,255,255,0.02); }
+        #addr { 
+            display: block; font-size: 1.5rem; font-weight: bold; margin-bottom: 30px; 
+            word-break: break-all; color: var(--fg); font-family: 'Courier New', monospace;
+        }
+
+        .btn-row { display: flex; gap: 10px; justify-content: center; }
+        .btn-row button { 
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: var(--fg); color: var(--bg); border: none; padding: 18px 10px; 
+            cursor: pointer; font-size: 0.9rem; font-weight: 900; border-radius: 4px;
+        }
+        .btn-row button:active { transform: scale(0.96); }
+
+        .inbox-container { flex-grow: 1; padding: 25px; min-height: 400px; }
+        .status-line { 
+            display: flex; justify-content: space-between; font-size: 0.8rem; 
+            color: var(--accent); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+        }
+
+        .mail-card { 
+            border: 1px solid var(--border); padding: 20px; margin-bottom: 15px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255,255,255,0.03); border-radius: 4px;
+        }
+        .mail-card:hover { border-color: var(--fg); transform: translateX(5px); }
+        .m-sub { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+        .m-from { font-size: 0.85rem; color: var(--accent); }
+
+        /* token panel */
+        #token-panel { 
+            position: absolute; top: 75px; right: 20px; width: 280px; background: var(--card); 
+            border: 2px solid var(--fg); padding: 20px; z-index: 3000; display: none; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .token-display { 
+            background: #111; color: var(--green); padding: 12px; font-size: 0.75rem; 
+            word-break: break-all; cursor: pointer; border: 1px dashed var(--accent); margin: 15px 0;
+            text-align: center;
+        }
+        .token-display:hover { background: #222; }
+
+        #token-input { 
+            width: 100%; padding: 12px; background: #000; color: #fff; border: 1px solid var(--border); 
+            margin-bottom: 15px; font-size: 0.9rem;
+        }
+
+        /* viewer */
+        #viewer { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg); z-index: 4000; display: none; padding: 30px; overflow-y: auto; 
+        }
+        .back-btn { background: var(--fg); color: var(--bg); padding: 12px 25px; font-weight: 900; cursor: pointer; margin-bottom: 30px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo"><i data-lucide="shield-check" color="#00ff00"></i> GHOST_VAULT</div>
+        <div class="nav-right">
+            <div class="menu-icon" onclick="toggleTheme()"><i data-lucide="sun" id="t-icon"></i></div>
+            <div class="menu-icon" onclick="toggleToken()"><i data-lucide="menu"></i></div>
+        </div>
+    </header>
+
+    <div id="token-panel">
+        <h3 style="margin:0; font-size: 1rem;">SECURE ACCESS</h3>
+        <p style="font-size: 0.7rem; color: var(--accent);">Click token to copy. Save it to restore later.</p>
+        <div class="token-display" id="current-token" onclick="copyToken()">GENERATING...</div>
+        <input type="text" id="token-input" placeholder="Enter Token to Restore">
+        <button onclick="restoreFromToken()" style="width:100%; background:var(--fg); color:var(--bg); border:none; padding:12px; font-weight:bold; cursor:pointer;">RESTORE IDENTITY</button>
+    </div>
+
+    <div class="address-section">
+        <span id="addr">SYNCING_CORE...</span>
+        <div class="btn-row">
+            <button onclick="copyAddr()"><i data-lucide="copy" size="18"></i> COPY</button>
+            <button onclick="generateNew()"><i data-lucide="zap" size="18"></i> NEW</button>
+            <button onclick="checkInbox()"><i data-lucide="refresh-cw" size="18"></i> REFRESH</button>
+        </div>
+    </div>
+
+    <div class="inbox-container">
+        <div class="status-line">
+            <span><i data-lucide="radio" size="12" style="vertical-align:middle"></i> SECURE_CONNECTION: OK</span>
+            <span id="count">0 MESSAGES</span>
+        </div>
+        <div id="inbox-list"></div>
+    </div>
+</div>
+
+<div id="viewer">
+    <div class="back-btn" onclick="closeMail()">← BACK_TO_VAULT</div>
+    <div id="mail-full" style="border: 2px solid var(--border); padding: 30px; background: var(--card); font-size: 1.1rem; line-height: 1.6;"></div>
+</div>
+
+<script>
+    let login = "", domain = "";
+    // Multiple Domains for Unlimited Users
+    const domains = ["1secmail.com", "1secmail.net", "1secmail.org", "esiix.com", "wwjmp.com"];
+    const API = "https://www.1secmail.com/api/v1/action";
+
+    // ১. token save and copy
+    function saveToken(l, d) {
+        const token = btoa(`${l}:${d}`);
+        localStorage.setItem('ghost_vault_token', token);
+        document.getElementById('current-token').innerText = token;
+    }
+
+    function copyToken() {
+        const token = document.getElementById('current-token').innerText;
+        navigator.clipboard.writeText(token);
+        alert("TOKEN COPIED! Save it to access this mail later.");
+    }
+
+    // ২. restore system 
+    function restoreFromToken() {
+        const token = document.getElementById('token-input').value;
+        if(!token) return;
+        try {
+            const decoded = atob(token).split(':');
+            login = decoded[0]; domain = decoded[1];
+            localStorage.setItem('ghost_vault_token', token);
+            document.getElementById('current-token').innerText = token;
+            updateUI();
+            toggleToken();
+            checkInbox();
+        } catch(e) { alert("Invalid Token Structure!"); }
+    }
+
+    // ৩. new id generator (Multiple API Domains)
+    async function generateNew() {
+        domain = domains[Math.floor(Math.random() * domains.length)];
+        login = Math.random().toString(36).substring(2, 14); // Longer login for safety
+        saveToken(login, domain);
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('addr').innerText = `${login}@${domain}`;
+        document.getElementById('inbox-list').innerHTML = `<p style="text-align:center; color:var(--accent); margin-top:50px;">Listening for encrypted packets...</p>`;
+    }
+
+    // ৪. inbox logic 
+    async function checkInbox() {
+        if (!login) return;
+        try {
+            const res = await fetch(`${API}?action=getMessages&login=${login}&domain=${domain}`);
+            const data = await res.json();
+            const list = document.getElementById('inbox-list');
+            document.getElementById('count').innerText = `${data.length} MESSAGES`;
+            
+            if (data.length > 0) {
+                list.innerHTML = "";
+                data.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'mail-card';
+                    div.innerHTML = `<div><div class="m-sub">${m.subject || '(NO SUBJECT)'}</div><div class="m-from">SENDER: ${m.from}</div></div><i data-lucide="eye"></i>`;
+                    div.onclick = () => readMail(m.id);
+                    list.appendChild(div);
+                });
+                lucide.createIcons();
+            }
+        } catch (e) {}
+    }
+
+    async function readMail(id) {
+        const res = await fetch(`${API}?action=readMessage&login=${login}&domain=${domain}&id=${id}`);
+        const d = await res.json();
+        document.getElementById('viewer').style.display = "block";
+        document.getElementById('mail-full').innerHTML = `
+            <h2 style="margin-top:0">${d.subject}</h2>
+            <p style="color:var(--accent); font-size:0.9rem">FROM: ${d.from} | DATE: ${d.date}</p>
+            <hr style="border:1px solid var(--border); margin:20px 0;">
+            <div>${d.htmlBody || d.textBody}</div>`;
+    }
+
+    function toggleToken() {
+        const panel = document.getElementById('token-panel');
+        panel.style.display = (panel.style.display === "block") ? "none" : "block";
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        const icon = document.getElementById('t-icon');
+        icon.setAttribute('data-lucide', document.body.classList.contains('light-mode') ? 'moon' : 'sun');
+        lucide.createIcons();
+    }
+
+    function closeMail() { document.getElementById('viewer').style.display = "none"; }
+
+    function copyAddr() {
+        navigator.clipboard.writeText(`${login}@${domain}`);
+        alert("ADDRESS COPIED!");
+    }
+
+    window.onload = () => {
+        const saved = localStorage.getItem('ghost_vault_token');
+        if (saved) {
+            const decoded = atob(saved).split(':');
+            login = decoded[0]; domain = decoded[1];
+            document.getElementById('current-token').innerText = saved;
+            updateUI();
+        } else {
+            generateNew();
+        }
+        setInterval(checkInbox, 5000);
+        lucide.createIcons();
+    };
+</script>
+
+</body>
+</html>
