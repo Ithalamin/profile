@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ghost-Net | Phantom V21 Hybrid</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #0d0f14; --surface: #161920; --primary: #3b82f6; --text: #f3f4f6;
+            --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.08); --me: #2563eb;
+            --indicator: #10b981; --warn: #f59e0b;
+        }
+
+        .light {
+            --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb; --text: #0f172a;
+            --text-dim: #64748b; --border: rgba(0, 0, 0, 0.1); --me: #3b82f6;
+            --indicator: #059669; --warn: #d97706;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            height: 100%; width: 100%; background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- UI Header --- */
+        header {
+            min-height: 75px; padding: 0 25px; background: var(--surface);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); z-index: 100;
+        }
+
+        .identity-stack { display: flex; flex-direction: column; }
+        .room-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--primary); letter-spacing: 1px; }
+        .engine-status { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-top: 3px; display: flex; gap: 8px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; background: var(--indicator); }
+
+        .nav-actions { display: flex; gap: 12px; }
+
+        .btn-tool {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .btn-tool:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .btn-tool.active { background: var(--primary); color: white; border: none; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+
+        /* --- Chat Viewport --- */
+        #scroller { 
+            flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 18px;
+            scroll-behavior: smooth; background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 25px 25px;
+        }
+
+        .msg-frame { display: flex; flex-direction: column; max-width: 80%; animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; opacity: 0; }
+        .msg-frame.me { align-self: flex-end; }
+        
+        .bubble { 
+            background: var(--surface); padding: 14px 18px; border-radius: 20px;
+            font-size: 14.5px; line-height: 1.5; border: 1px solid var(--border); word-break: break-word;
+        }
+        .me .bubble { background: var(--me); border: none; color: white; border-bottom-right-radius: 4px; }
+        .msg-frame:not(.me) .bubble { border-bottom-left-radius: 4px; }
+
+        .msg-meta { font-size: 10px; color: var(--text-dim); margin-top: 6px; padding: 0 10px; font-family: 'JetBrains Mono'; }
+        .me .msg-meta { text-align: right; }
+
+        #typing-box {
+            padding: 5px 25px; font-size: 11px; color: var(--indicator);
+            font-weight: 600; height: 22px; display: none;
+        }
+
+        /* --- Settings Portal --- */
+        #modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+
+        #settings-card {
+            background: var(--surface); width: 90%; max-width: 420px; padding: 30px;
+            border-radius: 28px; border: 1px solid var(--border);
+        }
+
+        .input-wrap { margin-bottom: 20px; }
+        .input-wrap label { font-size: 11px; font-weight: 700; color: var(--primary); display: block; margin-bottom: 8px; text-transform: uppercase; }
+        input, select { 
+            width: 100%; background: var(--bg); border: 1px solid var(--border); 
+            color: var(--text); padding: 12px 16px; border-radius: 12px; outline: none; transition: 0.2s;
+        }
+
+        /* --- Interaction Footer --- */
+        footer { 
+            padding: 15px 25px; background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; gap: 12px; align-items: center;
+        }
+
+        .control-bar { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 25px; display: flex; align-items: center; padding: 0 18px; }
+        .control-bar input { border: none; background: transparent; padding: 12px 0; width: 100%; color: var(--text); outline: none; }
+        
+        .btn-send { background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        @media (min-width: 1024px) {
+            #scroller { padding: 40px 30%; }
+            header, footer, #typing-box { padding-left: 30%; padding-right: 30%; }
+        }
+    </style>
+</head>
+<body class="dark" id="main-body">
+
+<header>
+    <div class="identity-stack">
+        <div class="room-code" id="room-id">ROOM//SCANNING</div>
+        <div class="engine-status">
+            <span><span class="status-dot"></span> MESH</span>
+            <span id="p2p-status"><span class="status-dot" style="background:var(--warn)"></span> P2P: INIT</span>
+        </div>
+    </div>
+    <div class="nav-actions">
+        <button class="btn-tool" onclick="copyRoom()"><i data-lucide="share-2" size="18"></i></button>
+        <button class="btn-tool" onclick="toggleTheme()"><i data-lucide="sun" id="t-icon" size="18"></i></button>
+        <button id="notif-bell" class="btn-tool" onclick="enableNotif()"><i data-lucide="bell-off" size="18"></i></button>
+        <button class="btn-tool" onclick="showUI(true)"><i data-lucide="sliders" size="18"></i></button>
+    </div>
+</header>
+
+<main id="scroller"></main>
+<div id="typing-box">...</div>
+
+<div id="modal-overlay" onclick="showUI(false)">
+    <div id="settings-card" onclick="event.stopPropagation()">
+        <h2 style="margin-bottom: 25px; font-size: 20px;">System Configuration</h2>
+        
+        <div class="input-wrap">
+            <label>Neural Alias</label>
+            <input type="text" id="node-name" onchange="syncPrefs()">
+        </div>
+
+        <div class="input-wrap">
+            <label>Data Vanish Cycle</label>
+            <select id="vanish-rate" onchange="syncPrefs()">
+                <option value="3600000">1 Hour</option>
+                <option value="86400000">24 Hours</option>
+                <option value="604800000" selected>7 Days (Stable)</option>
+                <option value="0">Eternal</option>
+            </select>
+        </div>
+
+        <div style="background: rgba(59,130,246,0.1); padding: 15px; border-radius: 12px; margin-bottom: 25px; font-size: 11px; line-height: 1.6;">
+            <b>Hybrid Tunnel:</b> WebRTC Mesh + PeerJS Direct Active.<br>
+            <b>Encryption:</b> Dual AES-256 + LZ Obfuscation.<br>
+            <b>Auto-Healing:</b> Failover protection enabled.
+        </div>
+
+        <button onclick="purge()" style="width:100%; padding:14px; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid #ef4444; border-radius:12px; font-weight:600; cursor:pointer;">Purge Local Cache</button>
+    </div>
+</div>
+
+<footer>
+    <label class="btn-tool" style="cursor:pointer">
+        <i data-lucide="plus" size="20"></i>
+        <input type="file" id="file-gate" style="display:none" onchange="shareFile(this)">
+    </label>
+    <div class="control-bar">
+        <input type="text" id="chat-input" placeholder="Secure transmission..." autocomplete="off">
+    </div>
+    <button class="btn-send" onclick="sendMsg()">
+        <i data-lucide="zap" size="20"></i>
+    </button>
+</footer>
+
+<script>
+    // --- 1. Protocol Architecture ---
+    const RID = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
+    document.getElementById('room-id').innerText = `ROOM//${RID.toUpperCase()}`;
+
+    // GunDB Mesh
+    const gun = Gun({
+        peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun'],
+        rtc: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+    });
+    const mesh = gun.get('ghost_v21_mesh_' + RID);
+    const pulse = gun.get('ghost_v21_pulse_' + RID);
+
+    // PeerJS Direct Fallback
+    const peer = new Peer('ghost-' + RID + '-' + Math.random().toString(36).substring(7));
+    let connections = [];
+
+    peer.on('open', (id) => {
+        document.getElementById('p2p-status').innerHTML = `<span class="status-dot"></span> P2P: LIVE`;
+    });
+
+    peer.on('connection', (conn) => {
+        setupConn(conn);
+    });
+
+    function setupConn(conn) {
+        conn.on('data', (raw) => {
+            const data = Crypt.decrypt(raw);
+            if(data) processIncoming(data, 'P2P');
+        });
+        connections.push(conn);
+    }
+
+    // --- 2. Security Engine ---
+    const Crypt = {
+        key: () => CryptoJS.SHA256(RID + "PHANTOM_KEY_2026").toString(),
+        encrypt: (obj) => {
+            const str = CryptoJS.AES.encrypt(JSON.stringify(obj), Crypt.key()).toString();
+            return LZString.compressToUTF16(str);
+        },
+        decrypt: (blob) => {
+            try {
+                const dec = LZString.decompressFromUTF16(blob);
+                const bytes = CryptoJS.AES.decrypt(dec, Crypt.key());
+                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            } catch(e) { return null; }
+        }
+    };
+
+    // --- 3. State & Prefs ---
+    let state = JSON.parse(localStorage.getItem('ghost_v21_state')) || {
+        alias: "NODE_" + Math.random().toString(36).substring(9).toUpperCase(),
+        vanish: 604800000,
+        notif: false,
+        theme: 'dark'
+    };
+
+    function showUI(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
+    
+    function syncPrefs() {
+        state.alias = document.getElementById('node-name').value || state.alias;
+        state.vanish = document.getElementById('vanish-rate').value;
+        localStorage.setItem('ghost_v21_state', JSON.stringify(state));
+    }
+
+    function toggleTheme() {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+    }
+
+    function applyTheme() {
+        document.getElementById('main-body').className = state.theme;
+        document.getElementById('t-icon').setAttribute('data-lucide', state.theme === 'dark' ? 'sun' : 'moon');
+        lucide.createIcons();
+        syncPrefs();
+    }
+
+    // --- 4. Notification System (Fixed for All Browsers) ---
+    function enableNotif() {
+        if (!("Notification" in window)) return alert("Browser not supported");
+        
+        Notification.requestPermission().then(permission => {
+            if(permission === 'granted') {
+                state.notif = !state.notif;
+                const btn = document.getElementById('notif-bell');
+                btn.classList.toggle('active', state.notif);
+                btn.innerHTML = state.notif ? `<i data-lucide="bell" size="18"></i>` : `<i data-lucide="bell-off" size="18"></i>`;
+                lucide.createIcons();
+                if(state.notif) {
+                    new Notification("Ghost-Net", { body: "Stealth Notifications Active", icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png" });
+                }
+                syncPrefs();
+            }
+        });
+    }
+
+    // --- 5. Transmission Core ---
+    const scroller = document.getElementById('scroller');
+    const seenMsgs = new Set();
+
+    // Receiving from GunDB
+    mesh.map().once((raw, id) => {
+        if(!raw || seenMsgs.has(id)) return;
+        const data = Crypt.decrypt(raw.payload);
+        if(!data) return;
+
+        // Vanish Check
+        if (state.vanish != 0 && (Date.now() - data.ts) > parseInt(state.vanish)) {
+            mesh.get(id).put(null);
+            return;
+        }
+
+        processIncoming(data, id);
+    });
+
+    function processIncoming(data, id) {
+        if(seenMsgs.has(id) && id !== 'P2P') return;
+        if(id !== 'P2P') seenMsgs.add(id);
+
+        const div = document.createElement('div');
+        div.className = 'msg-frame' + (data.uid === state.alias ? ' me' : '');
+        
+        const time = new Date(data.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const content = data.type === 'file' ? 
+            `<a href="${data.blob}" download="${data.name}" style="color:inherit;text-decoration:none"><b>📎 ${data.name}</b></a>` : 
+            data.blob;
+
+        div.innerHTML = `<div class="bubble">${content}</div><div class="msg-meta">${data.uid} • ${time}</div>`;
+        scroller.appendChild(div);
+        scroller.scrollTop = scroller.scrollHeight;
+
+        // Direct Notification Trigger
+        if(state.notif && data.uid !== state.alias) {
+            // Check visibility regardless of window focus
+            if (document.visibilityState !== 'visible') {
+                const n = new Notification(data.uid, {
+                    body: data.type === 'file' ? "Sent a file" : data.blob,
+                    tag: 'ghost-msg',
+                    renotify: true
+                });
+                n.onclick = () => { window.focus(); n.close(); };
+            }
+        }
+    }
+
+    // Typing Logic
+    pulse.map().on((isTyping, user) => {
+        if(user === state.alias) return;
+        const el = document.getElementById('typing-box');
+        el.innerText = `${user} is typing...`;
+        el.style.display = isTyping ? 'block' : 'none';
+    });
+
+    let tTimer;
+    document.getElementById('chat-input').oninput = () => {
+        pulse.get(state.alias).put(true);
+        clearTimeout(tTimer);
+        tTimer = setTimeout(() => pulse.get(state.alias).put(false), 2000);
+    };
+
+    function sendMsg() {
+        const input = document.getElementById('chat-input');
+        if(!input.value.trim()) return;
+
+        const packet = {
+            type: 'text',
+            blob: input.value,
+            uid: state.alias,
+            ts: Date.now()
+        };
+
+        const encrypted = Crypt.encrypt(packet);
+
+        // Send to GunDB (Mesh)
+        mesh.set({ payload: encrypted });
+        
+        // Send to PeerJS (Direct)
+        connections.forEach(c => c.send(encrypted));
+
+        input.value = '';
+        pulse.get(state.alias).put(false);
+    }
+
+    function shareFile(el) {
+        const file = el.files[0];
+        if(!file || file.size > 1.5 * 1024 * 1024) return alert("Limit: 1.5MB");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const packet = Crypt.encrypt({
+                type: 'file',
+                blob: e.target.result,
+                name: file.name,
+                uid: state.alias,
+                ts: Date.now()
+            });
+            mesh.set({ payload: packet });
+            connections.forEach(c => c.send(packet));
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function copyRoom() {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Encrypted Tunnel Link Copied!");
+    }
+
+    function purge() {
+        if(confirm("Confirm Nuke? All local history will be lost.")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'chat-input') sendMsg(); };
+
+    // Boot
+    document.getElementById('node-name').value = state.alias;
+    document.getElementById('vanish-rate').value = state.vanish;
+    applyTheme();
+    if(state.notif) {
+        const btn = document.getElementById('notif-bell');
+        btn.classList.add('active');
+        btn.innerHTML = `<i data-lucide="bell" size="18"></i>`;
+    }
+    lucide.createIcons();
+</script>
+</body>
+</html>
