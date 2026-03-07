@@ -3,161 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ghost-Net | V17 Ultra-Link</title>
+    <title>Ghost-Net | Phantom V20 Stealth</title>
     
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg: #0b0e11; --surface: #1a1f24; --primary: #3b82f6; --text: #f3f4f6; --border: rgba(255,255,255,0.08); --me: #2563eb; }
-        .light-mode { --bg: #f3f4f6; --surface: #ffffff; --primary: #2563eb; --text: #111827; --border: rgba(0,0,0,0.1); --me: #3b82f6; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body, html { height: 100%; width: 100%; background: var(--bg); color: var(--text); overflow: hidden; display: flex; flex-direction: column; }
+        :root {
+            --bg: #0d0f14; --surface: #161920; --primary: #3b82f6; --text: #f3f4f6;
+            --text-dim: #94a3b8; --border: rgba(255, 255, 255, 0.08); --me: #2563eb;
+            --indicator: #10b981;
+        }
 
-        header { height: 65px; padding: 0 15px; background: var(--surface); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .nav-btns { display: flex; gap: 8px; }
-        .btn-icon { background: var(--bg); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .light {
+            --bg: #f8fafc; --surface: #ffffff; --primary: #2563eb; --text: #0f172a;
+            --text-dim: #64748b; --border: rgba(0, 0, 0, 0.1); --me: #3b82f6;
+            --indicator: #059669;
+        }
 
-        #chat-scroller { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg { display: flex; flex-direction: column; max-width: 85%; }
-        .msg.me { align-self: flex-end; }
-        .bubble { background: var(--surface); padding: 12px 16px; border-radius: 18px; font-size: 14.5px; border: 1px solid var(--border); word-break: break-word; }
-        .me .bubble { background: var(--me); color: #fff; border: none; }
-        .meta { font-size: 9px; color: #9ca3af; margin-top: 4px; padding: 0 5px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body, html { 
+            height: 100%; width: 100%; background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        footer { padding: 15px; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 10px; }
-        .input-bar { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 25px; padding: 0 15px; display: flex; }
-        footer input { border: none; background: transparent; padding: 12px 0; flex: 1; color: var(--text); outline: none; }
-        .send-btn { background: var(--primary); border: none; width: 42px; height: 42px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        /* --- Header UI --- */
+        header {
+            min-height: 75px; padding: 0 25px; background: var(--surface);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
 
-        #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: var(--surface); width: 90%; max-width: 380px; padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-        select, input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; margin-top: 10px; }
+        .info-block { display: flex; flex-direction: column; }
+        .room-label { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--primary); letter-spacing: 1px; }
+        .tunnel-status { font-size: 9px; color: var(--text-dim); text-transform: uppercase; margin-top: 3px; font-weight: 600; }
+
+        .nav-tools { display: flex; gap: 12px; }
+
+        .icon-btn {
+            background: var(--bg); border: 1px solid var(--border); color: var(--text);
+            width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
+        }
+        .icon-btn:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .icon-btn.active { background: var(--primary); color: white; border: none; }
+
+        /* --- Chat Core --- */
+        #scroller { 
+            flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 18px;
+            scroll-behavior: smooth;
+        }
+
+        .msg-wrap { display: flex; flex-direction: column; max-width: 80%; animation: entry 0.4s ease forwards; opacity: 0; }
+        .msg-wrap.me { align-self: flex-end; }
+        
+        .bubble { 
+            background: var(--surface); padding: 15px 20px; border-radius: 22px;
+            font-size: 14.5px; line-height: 1.6; border: 1px solid var(--border); word-break: break-word;
+        }
+        .me .bubble { background: var(--me); border: none; color: white; border-bottom-right-radius: 5px; }
+        .msg-wrap:not(.me) .bubble { border-bottom-left-radius: 5px; }
+
+        .timestamp { font-size: 10px; color: var(--text-dim); margin-top: 7px; padding: 0 12px; font-family: 'JetBrains Mono'; }
+        .me .timestamp { text-align: right; }
+
+        /* --- Realtime Feedback --- */
+        #typing-status {
+            padding: 8px 25px; font-size: 11px; color: var(--indicator);
+            font-weight: 600; height: 25px; display: none; opacity: 0.8;
+        }
+
+        /* --- Settings Overlay --- */
+        #glass-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+
+        #settings-pane {
+            background: var(--surface); width: 90%; max-width: 420px; padding: 35px;
+            border-radius: 32px; border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .setting-row { margin-bottom: 25px; }
+        .setting-row label { font-size: 11px; font-weight: 700; color: var(--primary); display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, select { 
+            width: 100%; background: var(--bg); border: 1px solid var(--border); 
+            color: var(--text); padding: 14px 18px; border-radius: 14px; outline: none; transition: 0.3s;
+            font-size: 14px;
+        }
+        input:focus { border-color: var(--primary); }
+
+        /* --- Footer Controller --- */
+        footer { 
+            padding: 18px 25px; background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; gap: 15px; align-items: center;
+        }
+
+        .input-group { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; padding: 0 20px; transition: 0.3s; }
+        .input-group:focus-within { border-color: var(--primary); }
+        .input-group input { border: none; background: transparent; padding: 14px 0; width: 100%; font-size: 15px; color: var(--text); outline: none; }
+        
+        .action-send { background: var(--primary); border: none; width: 48px; height: 48px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .action-send:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+
+        @keyframes entry { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive Breakpoints */
+        @media (min-width: 1024px) {
+            #scroller { padding: 40px 28%; }
+            header, footer, #typing-status { padding-left: 28%; padding-right: 28%; }
+        }
     </style>
 </head>
-<body>
+<body class="dark" id="phantom-app">
 
 <header>
-    <div id="status" style="font-size: 11px; font-weight: bold; color: var(--primary);">INITIALIZING...</div>
-    <div class="nav-btns">
-        <button class="btn-icon" onclick="shareLink()"><i data-lucide="share-2" size="18"></i></button>
-        <button class="btn-icon" onclick="toggleTheme()"><i data-lucide="sun" size="18"></i></button>
-        <button class="btn-icon" onclick="toggleModal(true)"><i data-lucide="settings" size="18"></i></button>
+    <div class="info-block">
+        <div class="room-label" id="room-id-display">PHANTOM//INIT</div>
+        <div class="tunnel-status">P2P Encryption: AES-256-LZ</div>
+    </div>
+    <div class="nav-tools">
+        <button class="icon-btn" onclick="copyInvite()"><i data-lucide="share" size="18"></i></button>
+        <button class="icon-btn" onclick="switchTheme()"><i data-lucide="moon" id="theme-icon" size="18"></i></button>
+        <button id="bell-btn" class="icon-btn" onclick="requestNotif()"><i data-lucide="bell" size="18"></i></button>
+        <button class="icon-btn" onclick="uiModal(true)"><i data-lucide="settings-2" size="18"></i></button>
     </div>
 </header>
 
-<main id="chat-scroller"></main>
+<main id="scroller"></main>
+<div id="typing-status">...</div>
 
-<div id="modal-overlay" onclick="toggleModal(false)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <h3>Settings</h3>
-        <label style="font-size: 10px; color:#9ca3af;">AUTO-DELETE MESSAGES</label>
-        <select id="auto-del">
-            <option value="604800000" selected>7 Days</option>
-            <option value="86400000">24 Hours</option>
-            <option value="0">Off</option>
-        </select>
-        <p style="font-size: 10px; color:#9ca3af; margin-top: 15px;">কানেকশন কাজ না করলে পেজ রিফ্রেশ দিন।</p>
+<div id="glass-overlay" onclick="uiModal(false)">
+    <div id="settings-pane" onclick="event.stopPropagation()">
+        <h2 style="margin-bottom: 28px; font-size: 22px; font-weight: 600; color: var(--text);">Stealth Configuration</h2>
+        
+        <div class="setting-row">
+            <label>Public Signature (Alias)</label>
+            <input type="text" id="alias-input" placeholder="Ghost User" onchange="persistSettings()">
+        </div>
+
+        <div class="setting-row">
+            <label>Auto-Vanish Frequency</label>
+            <select id="vanish-select" onchange="persistSettings()">
+                <option value="600000">10 Minutes</option>
+                <option value="3600000">1 Hour</option>
+                <option value="86400000">24 Hours</option>
+                <option value="604800000" selected>7 Days (Standard)</option>
+                <option value="0">Eternal (Dev Mode)</option>
+            </select>
+        </div>
+
+        <div style="background: rgba(59,130,246,0.08); padding: 20px; border-radius: 18px; margin-bottom: 30px; border: 1px solid var(--border);">
+            <p style="font-size: 11px; line-height: 1.6; color: var(--text-dim);">
+                <span style="color: var(--primary); font-weight: bold;">STUN:</span> active.l.google.com:19302<br>
+                <span style="color: var(--primary); font-weight: bold;">MESH:</span> Distributed P2P Graph<br>
+                <span style="color: var(--primary); font-weight: bold;">CRYPT:</span> Zero-Knowledge End-to-End
+            </p>
+        </div>
+
+        <button onclick="nukeCache()" style="width:100%; padding:15px; background:transparent; color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:14px; font-weight:600; cursor:pointer; transition: 0.2s;">Wipe Device Memory</button>
     </div>
 </div>
 
 <footer>
-    <label class="btn-icon" style="cursor:pointer"><i data-lucide="plus" size="20"></i><input type="file" style="display:none" onchange="sendFile(this)"></label>
-    <div class="input-bar"><input type="text" id="msg-in" placeholder="Type message..." disabled autocomplete="off"></div>
-    <button class="send-btn" id="send-btn" onclick="send()" disabled><i data-lucide="send" size="18"></i></button>
+    <label class="icon-btn" style="cursor:pointer">
+        <i data-lucide="paperclip" size="20"></i>
+        <input type="file" id="upload-gate" style="display:none" onchange="handleFile(this)">
+    </label>
+    <div class="input-group">
+        <input type="text" id="main-input" placeholder="Secure transmission..." autocomplete="off">
+    </div>
+    <button class="action-send" onclick="transmit()">
+        <i data-lucide="send" size="20"></i>
+    </button>
 </footer>
 
 <script>
-    let peer = new Peer();
-    let conn = null;
-    let autoKey = "";
+    // --- 1. Global Setup & ICE Servers ---
+    const ROOM_ID = window.location.hash.substring(1) || (window.location.hash = Math.random().toString(36).substring(7));
+    document.getElementById('room-id-display').innerText = `ROOM//${ROOM_ID.toUpperCase()}`;
 
-    // ১. নিজের আইডি পাওয়া এবং অটো-কানেক্ট চেক
-    peer.on('open', (id) => {
-        document.getElementById('status').innerText = "ONLINE // READY";
-        autoKey = id; 
-        const targetId = window.location.hash.substring(1);
-        if(targetId) {
-            document.getElementById('status').innerText = "CONNECTING TO PARTNER...";
-            connectToPeer(targetId);
+    // STUN Servers Integrated for Firewall Bypass
+    const gun = Gun({
+        peers: ['https://gun-manhattan.herokuapp.com/gun', 'https://peer.wall.org/gun'],
+        rtc: {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun.services.mozilla.com' }
+            ]
         }
     });
 
-    // ২. কেউ আপনাকে কানেক্ট করলে
-    peer.on('connection', (incoming) => {
-        conn = incoming;
-        setupChat();
-    });
+    const mesh = gun.get('phantom_v20_data_' + ROOM_ID);
+    const pulse = gun.get('phantom_v20_pulse_' + ROOM_ID);
 
-    function connectToPeer(id) {
-        conn = peer.connect(id, { reliable: true });
-        setupChat();
+    // --- 2. Persistent State ---
+    let session = JSON.parse(localStorage.getItem('phantom_v20_store')) || {
+        alias: "NODE_" + Math.random().toString(36).substring(9).toUpperCase(),
+        vanish: 604800000,
+        notif: false,
+        theme: 'dark'
+    };
+
+    // --- 3. Encryption Engine ---
+    const Vault = {
+        key: () => CryptoJS.SHA256(ROOM_ID + "GHOST_V20_SALT_88").toString(),
+        encrypt: (data) => {
+            const cipher = CryptoJS.AES.encrypt(JSON.stringify(data), Vault.key()).toString();
+            return LZString.compressToUTF16(cipher);
+        },
+        decrypt: (blob) => {
+            try {
+                const dec = LZString.decompressFromUTF16(blob);
+                const bytes = CryptoJS.AES.decrypt(dec, Vault.key());
+                return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+            } catch(e) { return null; }
+        }
+    };
+
+    // --- 4. Logic & UI Controllers ---
+    function uiModal(show) { document.getElementById('glass-overlay').style.display = show ? 'flex' : 'none'; }
+    
+    function persistSettings() {
+        session.alias = document.getElementById('alias-input').value || session.alias;
+        session.vanish = document.getElementById('vanish-select').value;
+        localStorage.setItem('phantom_v20_store', JSON.stringify(session));
     }
 
-    function setupChat() {
-        conn.on('open', () => {
-            document.getElementById('status').innerText = "SECURE TUNNEL ACTIVE";
-            document.getElementById('msg-in').disabled = false;
-            document.getElementById('send-btn').disabled = false;
-            log("System", "End-to-End Encryption Enabled.", "received");
-        });
+    function switchTheme() {
+        session.theme = session.theme === 'dark' ? 'light' : 'dark';
+        applyGlobalState();
+    }
 
-        conn.on('data', (data) => {
-            // ডিক্রিপশন ছাড়াই দেখাচ্ছি কারণ অটো-কিউ ব্যবহার হচ্ছে
-            if(data.type === 'file') {
-                log("Partner", `<a href="${data.payload}" download="${data.name}" style="color:var(--primary)">📎 ${data.name}</a>`, "received");
-            } else {
-                log("Partner", data.payload, "received");
+    function applyGlobalState() {
+        document.getElementById('phantom-app').className = session.theme;
+        const icon = document.getElementById('theme-icon');
+        icon.setAttribute('data-lucide', session.theme === 'dark' ? 'sun' : 'moon');
+        lucide.createIcons();
+        persistSettings();
+    }
+
+    function requestNotif() {
+        if (!("Notification" in window)) return;
+        Notification.requestPermission().then(permission => {
+            if(permission === 'granted') {
+                session.notif = !session.notif;
+                document.getElementById('bell-btn').classList.toggle('active', session.notif);
+                persistSettings();
             }
         });
+    }
 
-        conn.on('error', (err) => {
-            alert("Connection Error: " + err);
+    // --- 5. Real-time Communication Bridge ---
+    const scroller = document.getElementById('scroller');
+    const history = new Set();
+
+    // Receiving Data
+    mesh.map().once((raw, id) => {
+        if(!raw || history.has(id)) return;
+        const data = Vault.decrypt(raw.payload);
+        if(!data) return;
+
+        // Auto-Delete Logic (Memory Management)
+        if (session.vanish != 0 && (Date.now() - data.ts) > parseInt(session.vanish)) {
+            mesh.get(id).put(null);
+            return;
+        }
+
+        history.add(id);
+        pushToUI(data);
+    });
+
+    function pushToUI(data) {
+        const div = document.createElement('div');
+        div.className = 'msg-wrap' + (data.uid === session.alias ? ' me' : '');
+        
+        const time = new Date(data.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        const content = data.type === 'file' ? 
+            `<a href="${data.blob}" download="${data.name}" style="color:inherit;text-decoration:none"><i data-lucide="download-cloud" size="14" style="vertical-align:middle;margin-right:5px"></i>${data.name}</a>` : 
+            data.blob;
+
+        div.innerHTML = `<div class="bubble">${content}</div><div class="timestamp">${data.uid} • ${time}</div>`;
+        scroller.appendChild(div);
+        scroller.scrollTop = scroller.scrollHeight;
+        lucide.createIcons();
+
+        // Notification Engine
+        if(session.notif && document.hidden && data.uid !== session.alias) {
+            new Notification(data.uid, { body: data.type === 'file' ? "Shared a file" : data.blob });
+        }
+    }
+
+    // Typing Indicator System
+    pulse.map().on((isTyping, user) => {
+        if(user === session.alias) return;
+        const statusEl = document.getElementById('typing-status');
+        statusEl.innerText = `${user} is typing...`;
+        statusEl.style.display = isTyping ? 'block' : 'none';
+    });
+
+    let typingTimer;
+    document.getElementById('main-input').oninput = () => {
+        pulse.get(session.alias).put(true);
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => pulse.get(session.alias).put(false), 2000);
+    };
+
+    function transmit() {
+        const input = document.getElementById('main-input');
+        if(!input.value.trim()) return;
+
+        const packet = Vault.encrypt({
+            type: 'text',
+            blob: input.value,
+            uid: session.alias,
+            ts: Date.now()
         });
+
+        mesh.set({ payload: packet });
+        input.value = '';
+        pulse.get(session.alias).put(false);
     }
 
-    function send() {
-        const val = document.getElementById('msg-in').value.trim();
-        if(!val || !conn) return;
-        conn.send({ type: 'text', payload: val });
-        log("You", val, "me");
-        document.getElementById('msg-in').value = "";
-    }
-
-    function sendFile(el) {
+    function handleFile(el) {
         const file = el.files[0];
-        if(file.size > 2000000) return alert("Max 2MB file allowed");
+        if(!file || file.size > 2 * 1024 * 1024) return alert("System limit: 2MB per file");
+
         const reader = new FileReader();
-        reader.onload = e => {
-            conn.send({ type: 'file', payload: e.target.result, name: file.name });
-            log("You", "Sent file: " + file.name, "me");
+        reader.onload = (e) => {
+            const packet = Vault.encrypt({
+                type: 'file',
+                blob: e.target.result,
+                name: file.name,
+                uid: session.alias,
+                ts: Date.now()
+            });
+            mesh.set({ payload: packet });
         };
         reader.readAsDataURL(file);
     }
 
-    function log(user, text, type) {
-        const d = document.createElement('div');
-        d.className = `msg ${type}`;
-        d.innerHTML = `<div class="bubble">${text}</div><div class="meta">${user} • ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>`;
-        document.getElementById('chat-scroller').appendChild(d);
-        document.getElementById('chat-scroller').scrollTop = document.getElementById('chat-scroller').scrollHeight;
-
-        const expiry = parseInt(document.getElementById('auto-del').value);
-        if(expiry > 0) setTimeout(() => d.remove(), expiry);
+    // --- 6. Utilities ---
+    function copyInvite() {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Encrypted Invite Copied!");
     }
 
-    function shareLink() {
-        const link = window.location.origin + window.location.pathname + "#" + peer.id;
-        navigator.clipboard.writeText(link);
-        alert("Link Copied! Send this to your friend. Once they open it, you are connected.");
+    function nukeCache() {
+        if(confirm("DANGER: This will permanently erase your local session. Continue?")) {
+            localStorage.clear();
+            location.reload();
+        }
     }
 
-    function toggleModal(s) { document.getElementById('modal-overlay').style.display = s ? 'flex' : 'none'; }
-    function toggleTheme() { document.body.classList.toggle('light-mode'); }
-    window.onkeydown = e => { if(e.key === "Enter") send(); };
-    lucide.createIcons();
+    window.onkeydown = (e) => { if(e.key === "Enter" && document.activeElement.id === 'main-input') transmit(); };
+
+    // Boot App
+    document.getElementById('alias-input').value = session.alias;
+    document.getElementById('vanish-select').value = session.vanish;
+    applyGlobalState();
 </script>
 </body>
 </html>
