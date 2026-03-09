@@ -1,37 +1,55 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite.Shop | Automated Engine</title>
+    <title>Elite Shop | Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
 <body class="bg-white text-black dark:bg-black dark:text-white transition-colors duration-500">
-    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-zinc-900 px-6 py-4 flex justify-between items-center">
-        <div class="font-black text-xl tracking-tighter italic">ELITE.DEALS</div>
-        <div class="flex space-x-2">
-            <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-            <span class="text-[10px] font-bold uppercase tracking-widest">System Live</span>
+
+    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-zinc-800 px-6 py-4 flex justify-between items-center">
+        <div class="font-black text-xl tracking-tighter uppercase italic">Elite.Shop</div>
+        <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400">Auto-Refreshed</span>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-2 py-8">
-        <div id="product-container" class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-            {% for i in range(1, 13) %}
-            <div class="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-xl overflow-hidden flex flex-col justify-between shadow-sm">
-                <div class="p-4 text-center">
-                    <img id="p{{i}}-img" src="https://via.placeholder.com/150" class="h-32 w-full object-contain mb-2 dark:mix-blend-lighten">
-                    <h3 id="p{{i}}-title" class="text-[11px] font-bold line-clamp-2 h-8 text-gray-700 dark:text-gray-300 uppercase tracking-tighter">Scanning Amazon...</h3>
-                </div>
-                <div class="p-3 bg-gray-50 dark:bg-zinc-800/50">
-                    <div class="text-center mb-2">
-                        <span id="p{{i}}-price" class="text-sm font-black text-indigo-600 dark:text-indigo-400">₹0,000</span>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            
+            <script>
+                for(let i=1; i<=12; i++) {
+                    document.write(`
+                    <div class="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-lg transition">
+                        <div class="p-4 text-center">
+                            <div class="h-32 w-full flex items-center justify-center mb-2">
+                                <img id="p${i}-img" src="https://via.placeholder.com/150" class="max-h-full object-contain">
+                            </div>
+                            <h3 id="p${i}-title" class="text-[11px] md:text-sm font-bold line-clamp-2 h-8 text-gray-700 dark:text-gray-300 uppercase tracking-tight">Syncing System...</h3>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-zinc-800/40">
+                            <div class="text-center mb-2">
+                                <span id="p${i}-price" class="text-sm md:text-lg font-black text-indigo-600 dark:text-indigo-400">₹0,000</span>
+                            </div>
+                            <a id="p${i}-link" href="#" target="_blank" class="block w-full py-2.5 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black rounded-lg uppercase text-center tracking-widest hover:opacity-80">Check Deal</a>
+                        </div>
                     </div>
-                    <a id="p{{i}}-link" href="#" target="_blank" class="block w-full py-2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black rounded uppercase text-center tracking-widest">Get Deal</a>
-                </div>
-            </div>
-            {% endfor %}
+                    `);
+                }
+            </script>
+
         </div>
     </main>
+
+    <footer class="py-12 border-t border-gray-100 dark:border-zinc-900 text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+        &copy; 2026 Elite.Shop Engine • Zero-Footprint Automation
+    </footer>
+
 </body>
 </html>
