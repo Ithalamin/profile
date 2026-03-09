@@ -1,0 +1,24 @@
+name: Phantom Engine Update
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with: {python-version: '3.9'}
+      - name: Install
+        run: pip install requests beautifulsoup4
+      - name: Execute Hunter
+        run: python engine.py
+      - name: Ghost Commit
+        run: |
+          git config --global user.name "Elite-Bot"
+          git config --global user.email "bot@elite.com"
+          git add .
+          git commit -m "System-level update: Deals refreshed"
+          git push
