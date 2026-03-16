@@ -1,0 +1,22 @@
+name: Auto-Build-Shop
+on:
+  schedule:
+    - cron: '0 0 * * *' # প্রতিদিন রাত ১২টায় চলবে
+  workflow_dispatch: # ম্যানুয়ালি রান করার বাটন
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Engine
+        run: |
+          pip install jinja2
+          python generator.py
+      - name: Sync Changes
+        run: |
+          git config --global user.name "Shop-Bot"
+          git config --global user.email "bot@shop.com"
+          git add .
+          git commit -m "Automated shop update" || exit 0
+          git push
