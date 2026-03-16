@@ -1,40 +1,62 @@
 import json
 import os
-import base64
+import requests
+from bs4 import BeautifulSoup
 from jinja2 import Template
-from datetime import datetime
+import base64
 
-# স্যাম্পল প্রোডাক্ট ডাটা (পরবর্তীতে এটি স্ক্র্যাপার দিয়ে রিপ্লেস করা যাবে)
-def get_mock_products(category):
-    return [
-        {"name": f"Premium {category} 1", "price": "19,999", "img": "https://via.placeholder.com/300", "link": "https://amazon.com"},
-        {"name": f"Elite {category} 2", "price": "14,500", "img": "https://via.placeholder.com/300", "link": "https://flipkart.com"}
-    ]
+# এই ফাংশনটি এখন গুগল থেকে আসল ডাটা আনবে
+def get_real_products(query):
+    search_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&tbm=shop"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    
+    try:
+        response = requests.get(search_url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        products = []
+        
+        # গুগল শপিং থেকে টপ ৫টি প্রোডাক্ট স্ক্র্যাপ করা
+        for item in soup.select('.sh-dgr__content')[:5]:
+            name = item.select_one('h3').text
+            price = item.select_one('.a8U8ve').text
+            # আপনার অ্যাফিলিয়েট আইডি এখানে যোগ হবে
+            raw_link = "https://www.amazon.in/s?k=" + name.replace(' ', '+') + "&tag=YOUR_AFF_ID_HERE"
+            img = item.select_one('img')['src']
+            
+            products.append({
+                "name": name,
+                "price": price,
+                "img": img,
+                "link": base64.b64encode(raw_link.encode()).decode() # লিঙ্ক হাইড করা
+            })
+        return products
+    except Exception as e:
+        print(f"Error fetching {query}: {e}")
+        return []
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ title }}</title>
-    <style>
-        body { background: #111; color: white; font-family: sans-serif; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 20px; }
-        .card { border: 1px solid #333; padding: 15px; border-radius: 10px; cursor: pointer; }
-        .card:hover { border-color: #00ff00; }
-        img { width: 100%; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <h1>{{ title }}</h1>
-    <div class="grid">
-        {% for p in products %}
-        <div class="card" onclick="location.href='{{ p.link }}'">
-            <img src="{{ p.img }}">
-            <h3>{{ p.name }}</h3>
-            <p style="color:#00ff00">Price: ₹{{ p.price }}</p>
-        </div>
-        {% endfor %}
+# আপনার মেইন ইঞ্জিন
+def build_empire():
+    if not os.path.exists('shop'): os.makedirs('shop')
+    
+    with open('categories.json', 'r') as f:
+        categories = json.load(f)
+
+    # আপনার ডিজাইন টেমপ্লেট (আগেরটাই থাকছে)
+    with open('shop/template.html', 'r') as t_file: # টেমপ্লেট আলাদা ফাইলে রাখলে সুবিধা
+        template = Template(t_file.read())
+
+    for cat in categories:
+        print(f"🕵️ Harvesting: {cat}")
+        real_data = get_real_products(cat)
+        
+        if real_data:
+            slug = cat.lower().replace(" ", "-")
+            output = template.render(title=cat, products=real_data)
+            with open(f"shop/{slug}.html", "w", encoding="utf-8") as f:
+                f.write(output)
+
+if __name__ == "__main__":
+    build_empire()        {% endfor %}
     </div>
 </body>
 </html>
