@@ -1,18 +1,23 @@
-name: Elite Shop Auto-Update
+name: MY SYSTEM
 
 on:
   schedule:
-    - cron: '0 0 * * *' 
-  workflow_dispatch: 
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -21,17 +26,15 @@ jobs:
         run: |
           pip install requests beautifulsoup4 jinja2
 
-      - name: Execute Generator
+      - name: Execute System Build
         run: |
-          # নিশ্চিত করা হচ্ছে shop ফোল্ডারটি আছে
           mkdir -p shop
           python generator.py
 
-      - name: Sync and Push Changes
+      - name: Push Updates to Main
         run: |
-          git config --global user.name "Shop-Bot"
-          git config --global user.email "bot@shop.com"
+          git config --global user.name "Shadow-Bot"
+          git config --global user.email "bot@shadow-empire.com"
           git add shop/*.html
-          # যদি কোনো পরিবর্তন না থাকে তবে এরর দেবে না
-          git commit -m "System Refresh: $(date)" || echo "Nothing to update"
+          git commit -m "Auto-Update: $(date)" || echo "No changes"
           git push origin main
