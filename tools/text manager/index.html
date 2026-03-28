@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEXT_MANAGER | NODE_CONTROL</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --bg: #000; --fg: #fff; --card: #0a0a0a; --border: #222; --accent: #888; --green: #00ff00; --red: #ff4444; }
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { background: var(--bg); color: var(--fg); font-family: 'Courier New', monospace; margin: 0; padding: 15px; display: flex; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; background: var(--card); border: 2px solid var(--border); position: relative; box-shadow: 0 20px 50px rgba(0,0,0,1); }
+        header { padding: 20px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #000; }
+        .logo { font-size: 1rem; font-weight: 900; letter-spacing: 2px; color: var(--green); }
+        
+        .form-section { padding: 20px; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        input { background: #000; color: #fff; border: 1px solid var(--border); padding: 12px; font-size: 0.8rem; border-radius: 4px; outline: none; }
+        input:focus { border-color: var(--green); }
+        .full-width { grid-column: span 2; }
+        button.add-btn { grid-column: span 2; background: var(--fg); color: var(--bg); border: none; padding: 15px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+
+        .vault-controls { padding: 15px 20px; display: flex; gap: 10px; background: #050505; border-bottom: 1px solid var(--border); }
+        .btn-tool { flex: 1; padding: 10px; font-size: 0.7rem; font-weight: bold; cursor: pointer; background: transparent; color: var(--accent); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-tool:hover { color: var(--fg); border-color: var(--fg); }
+
+        .node-list { padding: 20px; min-height: 300px; }
+        .node-card { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; border-radius: 4px; position: relative; overflow: hidden; }
+        .node-card:hover { border-color: var(--green); background: rgba(0,255,0,0.02); }
+        .node-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .node-name { font-weight: bold; color: var(--green); text-transform: uppercase; }
+        .node-url { font-size: 0.75rem; color: var(--accent); text-decoration: none; }
+        .node-url:hover { color: var(--fg); }
+        .node-info { display: flex; gap: 15px; font-size: 0.8rem; background: #111; padding: 8px; border-radius: 3px; }
+        .copy-trigger { cursor: pointer; color: var(--accent); }
+        .copy-trigger:hover { color: var(--fg); }
+        .del-btn { color: var(--red); cursor: pointer; opacity: 0.5; }
+        .del-btn:hover { opacity: 1; }
+
+        @media (max-width: 600px) { .form-section { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } button.add-btn { grid-column: span 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo"><i data-lucide="database"></i> GHOST_MANAGER_V1</div>
+        <div id="status-tag" style="font-size: 0.6rem; color: var(--accent);">SYSTEM_READY</div>
+    </header>
+
+    <div class="form-section">
+        <input type="text" id="siteName" placeholder="SITE NAME (e.g. NODE_01)" class="full-width">
+        <input type="text" id="siteUrl" placeholder="URL (https://...)" class="full-width">
+        <input type="text" id="username" placeholder="USERNAME">
+        <input type="text" id="password" placeholder="PASSWORD">
+        <button class="add-btn" onclick="saveNode()">Store in Vault</button>
+    </div>
+
+    <div class="vault-controls">
+        <button class="btn-tool" onclick="exportData()"><i data-lucide="download" size="14"></i> BACKUP</button>
+        <button class="btn-tool" onclick="document.getElementById('importFile').click()"><i data-lucide="upload" size="14"></i> RESTORE</button>
+        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+    </div>
+
+    <div class="node-list" id="nodeList">
+        </div>
+</div>
+
+<script>
+    let nodes = JSON.parse(localStorage.getItem('ghost_nodes')) || [];
+
+    function saveNode() {
+        const name = document.getElementById('siteName').value;
+        const url = document.getElementById('siteUrl').value;
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        if(!name || !url) return alert("MISSING DATA");
+
+        const node = { id: Date.now(), name, url, user, pass };
+        nodes.push(node);
+        localStorage.setItem('ghost_nodes', JSON.stringify(nodes));
+        renderNodes();
+        clearForm();
+    }
+
+    function renderNodes() {
+        const list = document.getElementById('nodeList');
+        list.innerHTML = nodes.length ? "" : "<p style='text-align:center; color:#333; margin-top:50px;'>VAULT_EMPTY</p>";
+        
+        nodes.forEach(node => {
+            const card = document.createElement('div');
+            card.className = 'node-card';
+            card.innerHTML = `
+                <div class="node-header">
+                    <div>
+                        <div class="node-name">${node.name}</div>
+                        <a href="${node.url}" target="_blank" class="node-url">${node.url}</a>
+                    </div>
+                    <i data-lucide="trash-2" class="del-btn" size="16" onclick="deleteNode(${node.id})"></i>
+                </div>
+                <div class="node-info">
+                    <span class="copy-trigger" onclick="copy('${node.user}')"><i data-lucide="user" size="12"></i> ${node.user}</span>
+                    <span class="copy-trigger" onclick="copy('${node.pass}')"><i data-lucide="key" size="12"></i> **********</span>
+                </div>
+            `;
+            list.appendChild(card);
+        });
+        lucide.createIcons();
+    }
+
+    function deleteNode(id) {
+        if(!confirm("DELETE_NODE?")) return;
+        nodes = nodes.filter(n => n.id !== id);
+        localStorage.setItem('ghost_nodes', JSON.stringify(nodes));
+        renderNodes();
+    }
+
+    function copy(text) {
+        navigator.clipboard.writeText(text);
+        document.getElementById('status-tag').innerText = "DATA_COPIED";
+        setTimeout(() => document.getElementById('status-tag').innerText = "SYSTEM_READY", 2000);
+    }
+
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(nodes));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "GHOST_VAULT_BACKUP.json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function importData(event) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            nodes = JSON.parse(e.target.result);
+            localStorage.setItem('ghost_nodes', JSON.stringify(nodes));
+            renderNodes();
+        };
+        reader.readAsText(event.target.files[0]);
+    }
+
+    function clearForm() {
+        document.getElementById('siteName').value = "";
+        document.getElementById('siteUrl').value = "";
+        document.getElementById('username').value = "";
+        document.getElementById('password').value = "";
+    }
+
+    window.onload = () => renderNodes();
+</script>
+</body>
+</html>
