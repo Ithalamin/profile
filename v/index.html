@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHOST_VAULT | SECURED_COMMUNICATION</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root { --bg: #000; --fg: #fff; --card: #0a0a0a; --border: #222; --accent: #888; --green: #00ff00; }
+        .light-mode { --bg: #f5f5f5; --fg: #000; --card: #fff; --border: #ddd; --accent: #555; --green: #008000; }
+        
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        body { background: var(--bg); color: var(--fg); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
+
+        .container { width: 100%; max-width: 650px; background: var(--card); border: 2px solid var(--border); display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        header { padding: 15px 20px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1rem; font-weight: 900; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+
+        #vault-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(255,255,255,0.01); }
+        .status-line { font-size: 0.7rem; color: var(--accent); padding: 5px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+
+        /* Message Styling */
+        .msg-card { border-left: 3px solid var(--green); padding: 12px; background: rgba(255,255,255,0.03); border-radius: 4px; position: relative; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .msg-text { font-size: 0.95rem; line-height: 1.5; word-break: break-all; margin-bottom: 5px; }
+        .msg-meta { font-size: 0.7rem; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .del-btn { color: #ff4444; cursor: pointer; font-size: 0.65rem; border: 1px solid #ff4444; padding: 2px 5px; border-radius: 3px; }
+
+        /* Input Area */
+        .input-vault { padding: 20px; border-top: 2px solid var(--border); background: #000; }
+        .input-row { display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; background: #111; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 4px; outline: none; }
+        input[type="text"]:focus { border-color: var(--green); }
+        .btn-icon { background: var(--fg); color: var(--bg); border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+        
+        /* File Share */
+        .file-link { color: var(--green); text-decoration: underline; font-weight: bold; display: flex; align-items: center; gap: 5px; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo"><i data-lucide="shield-check" color="#00ff00"></i> GHOST_VAULT</div>
+        <div class="nav-right" style="display: flex; gap: 15px;">
+            <div style="cursor:pointer" onclick="toggleTheme()"><i data-lucide="sun" size="18"></i></div>
+        </div>
+    </header>
+
+    <div class="status-line">
+        <span><i data-lucide="radio" size="10"></i> STATUS: <span style="color:var(--green)">ENCRYPTED_GLOBAL_STREAM</span></span>
+        <span id="peer-count">P2P_ACTIVE</span>
+    </div>
+
+    <div id="vault-messages">
+        <p style="text-align:center; color:var(--accent); font-size:0.8rem; margin-top:50px;">Waiting for encrypted packets...</p>
+    </div>
+
+    <div class="input-vault">
+        <div class="input-row">
+            <label class="btn-icon" title="Upload File">
+                <i data-lucide="paperclip" size="18"></i>
+                <input type="file" id="fileInput" onchange="sendFile()">
+            </label>
+            <input type="text" id="msgInput" placeholder="Enter encrypted message..." autocomplete="off">
+            <button class="btn-icon" onclick="sendMsg()"><i data-lucide="send" size="18"></i></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Configuration: Global Static Room
+    const GLOBAL_CHANNEL = "ghost_vault_global_secure_v1"; // এটা সবার জন্য এক
+    const topicUrl = `https://ntfy.sh/${GLOBAL_CHANNEL}/json`;
+    const PASS = "GHOST_KEY_STATIC_99"; // Global E2EE Key
+
+    // 🔐 AES-GCM Encryption Core
+    async function getCryptoKey() {
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(PASS));
+        return await crypto.subtle.importKey('raw', hash, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    }
+
+    async function processCrypt(content, isEncrypt = true) {
+        const key = await getCryptoKey();
+        if (isEncrypt) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const enc = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, new TextEncoder().encode(content));
+            return btoa(JSON.stringify({iv: Array.from(iv), data: Array.from(new Uint8Array(enc))}));
+        } else {
+            const {iv, data} = JSON.parse(atob(content));
+            const dec = await crypto.subtle.decrypt({name: 'AES-GCM', iv: new Uint8Array(iv)}, key, new Uint8Array(data));
+            return new TextDecoder().decode(dec);
+        }
+    }
+
+    // 📡 Real-time Listener
+    async function initVault() {
+        try {
+            const response = await fetch(topicUrl);
+            const reader = response.body.getReader();
+            const list = document.getElementById('vault-messages');
+            
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                const chunks = new TextDecoder().decode(value).split('\n');
+                chunks.forEach(async chunk => {
+                    if (!chunk) return;
+                    const pkg = JSON.parse(chunk);
+                    if (pkg.event === 'message') {
+                        try {
+                            const decrypted = await processCrypt(pkg.message, false);
+                            if (decrypted.startsWith("DEL:")) {
+                                document.getElementById(decrypted.split(":")[1])?.remove();
+                            } else {
+                                renderMsg(decrypted, pkg.id);
+                            }
+                        } catch (e) { console.log("Unreadable Packet Detected."); }
+                    }
+                });
+            }
+        } catch (e) { setTimeout(initVault, 3000); }
+    }
+
+    function renderMsg(content, id) {
+        const list = document.getElementById('vault-messages');
+        if (document.getElementById(id)) return;
+        if (list.querySelector('p')) list.innerHTML = '';
+
+        const card = document.createElement('div');
+        card.className = 'msg-card';
+        card.id = id;
+
+        let htmlBody = "";
+        if (content.startsWith("FILE:")) {
+            const [name, b64] = content.replace("FILE:", "").split("|");
+            htmlBody = `<a href="${b64}" download="${name}" class="file-link"><i data-lucide="download" size="14"></i> ${name}</a>`;
+        } else {
+            htmlBody = `<div class="msg-text">${content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:var(--green)">$1</a>')}</div>`;
+        }
+
+        card.innerHTML = `
+            ${htmlBody}
+            <div class="msg-meta">
+                <span>[${new Date().toLocaleTimeString()}]</span>
+                <span class="del-btn" onclick="killMsg('${id}')">BURN_DATA</span>
+            </div>`;
+        
+        list.appendChild(card);
+        list.scrollTop = list.scrollHeight;
+        lucide.createIcons();
+    }
+
+    async function sendMsg() {
+        const input = document.getElementById('msgInput');
+        if (!input.value) return;
+        const encrypted = await processCrypt(input.value);
+        fetch(`https://ntfy.sh/${GLOBAL_CHANNEL}`, { method: 'POST', body: encrypted });
+        input.value = '';
+    }
+
+    async function sendFile() {
+        const file = document.getElementById('fileInput').files[0];
+        if (!file || file.size > 300000) return alert("Limit: 300KB (Encoded)");
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const encrypted = await processCrypt(`FILE:${file.name}|${e.target.result}`);
+            fetch(`https://ntfy.sh/${GLOBAL_CHANNEL}`, { method: 'POST', body: encrypted });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function killMsg(id) {
+        const encrypted = await processCrypt(`DEL:${id}`);
+        fetch(`https://ntfy.sh/${GLOBAL_CHANNEL}`, { method: 'POST', body: encrypted });
+    }
+
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+    document.getElementById('msgInput').addEventListener('keypress', (e) => e.key === 'Enter' && sendMsg());
+
+    window.onload = () => { initVault(); lucide.createIcons(); };
+</script>
+</body>
+</html>
